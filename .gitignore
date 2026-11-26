@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # secret files
 credentials.json
+
+# configuration files
+chronos-config.yml
