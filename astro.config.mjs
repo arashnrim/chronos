@@ -2,6 +2,8 @@
 import { defineConfig, envField } from "astro/config";
 
 import vercel from "@astrojs/vercel";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,4 +14,8 @@ export default defineConfig({
       CALENDAR_ID: envField.string({ context: "server", access: "secret" }),
     },
   },
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  integrations: [react()],
 });
