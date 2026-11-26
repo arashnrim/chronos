@@ -12,6 +12,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.4.13"
+    "@astrojs/vercel": "^11.0.22",
+    "astro": "^7.4.13",
+    "googleapis": "^105.0.0"
+  },
+  "packageManager": "pnpm@12.21.0",
+  "devDependencies": {
+    "@types/node": "^26.6.7"
   }
 }
