@@ -1,6 +1,5 @@
-import yaml from "../../chronos-config.yml?raw";
-import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+import { CHRONOS_CONFIG_JSON } from "astro:env/server";
 
 const nonEmptyString = z.string().trim().min(1);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
@@ -56,10 +55,10 @@ export type CalendarConfig = z.infer<typeof calendarConfigSchema>;
 export const parseCalendarConfig = (source: string): CalendarConfig => {
   let document: unknown;
   try {
-    document = parseYaml(source);
+    document = JSON.parse(source);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid YAML in chronos-config.yml: ${message}`);
+    throw new Error(`Invalid JSON in CHRONOS_CONFIG_JSON: ${message}`);
   }
 
   const result = calendarConfigSchema.safeParse(document);
@@ -67,10 +66,10 @@ export const parseCalendarConfig = (source: string): CalendarConfig => {
     const details = result.error.issues
       .map((issue) => `${issue.path.join(".") || "config"}: ${issue.message}`)
       .join("; ");
-    throw new Error(`Invalid chronos-config.yml: ${details}`);
+    throw new Error(`Invalid CHRONOS_CONFIG_JSON: ${details}`);
   }
 
   return result.data;
 };
 
-export const calendarConfig = parseCalendarConfig(yaml);
+export const calendarConfig = parseCalendarConfig(CHRONOS_CONFIG_JSON);

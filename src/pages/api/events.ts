@@ -1,12 +1,11 @@
 export const prerender = false;
 
-import type { APIRoute } from "astro";
-import { resolve } from "node:path";
-import { google } from "googleapis";
-import { getCalendarPeriodBounds } from "@utils/parse";
 import { calendarConfig } from "@utils/calendar-config";
 import { normalizeCalendarEvents } from "@utils/normalize-events";
-import { CALENDAR_ID } from "astro:env/server";
+import { getCalendarPeriodBounds } from "@utils/parse";
+import type { APIRoute } from "astro";
+import { CALENDAR_ID, GOOGLE_CREDENTIALS_JSON } from "astro:env/server";
+import { google } from "googleapis";
 
 const badRequest = (error: string) =>
   new Response(JSON.stringify({ error }), {
@@ -40,7 +39,7 @@ export const GET = (async ({ request }) => {
   const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
   const auth = new google.auth.GoogleAuth({
     scopes,
-    keyFile: resolve(process.cwd(), "credentials.json"),
+    credentials: JSON.parse(GOOGLE_CREDENTIALS_JSON),
   });
   const calendar = google.calendar({ version: "v3", auth });
   let bounds: { timeMin: string; timeMax: string } | null = null;

@@ -1,9 +1,9 @@
 // @ts-check
 import { defineConfig, envField } from "astro/config";
 
+import react from "@astrojs/react";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,6 +12,14 @@ export default defineConfig({
     schema: {
       API_SECRET: envField.string({ context: "server", access: "secret" }),
       CALENDAR_ID: envField.string({ context: "server", access: "secret" }),
+      GOOGLE_CREDENTIALS_JSON: envField.string({
+        context: "server",
+        access: "secret",
+      }),
+      CHRONOS_CONFIG_JSON: envField.string({
+        context: "server",
+        access: "secret",
+      }),
     },
   },
   vite: {

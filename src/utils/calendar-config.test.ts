@@ -1,49 +1,45 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("astro:env/server", () => ({ CHRONOS_CONFIG_JSON: "{}" }));
+
 import { parseCalendarConfig } from "./calendar-config";
 import { normalizeCalendarEvent } from "./normalize-events";
 
-const configYaml = `
-people:
-  - name: Person A
-    color: "#26734D"
-  - name: Person B
-    color: "#B5473C"
-eventTypes:
-  - code: AL
-    label: Annual Leave
-  - code: OFF
-    label: Off
-  - code: PH
-    label: Public Holiday
-  - code: XYZ
-    label: Custom
-`;
+const config = {
+  people: [
+    { name: "Person A", color: "#26734D" },
+    { name: "Person B", color: "#B5473C" },
+  ],
+  eventTypes: [
+    { code: "AL", label: "Annual Leave" },
+    { code: "OFF", label: "Off" },
+    { code: "PH", label: "Public Holiday" },
+    { code: "XYZ", label: "Custom" },
+  ],
+};
+const configJson = JSON.stringify(config);
 
 describe("parseCalendarConfig", () => {
   it("parses configured people and event types", () => {
-    expect(parseCalendarConfig(configYaml)).toEqual({
-      people: [
-        { name: "Person A", color: "#26734D" },
-        { name: "Person B", color: "#B5473C" },
-      ],
-      eventTypes: [
-        { code: "AL", label: "Annual Leave" },
-        { code: "OFF", label: "Off" },
-        { code: "PH", label: "Public Holiday" },
-        { code: "XYZ", label: "Custom" },
-      ],
-    });
+    expect(parseCalendarConfig(configJson)).toEqual(config);
+  });
+
+  it("rejects malformed JSON", () => {
+    expect(() => parseCalendarConfig('{"people":')).toThrow(
+      "Invalid JSON in CHRONOS_CONFIG_JSON",
+    );
   });
 
   it("rejects duplicate person names and event type codes", () => {
-    const duplicatePersonName = configYaml.replace(
-      '  - name: Person B\n    color: "#B5473C"\neventTypes:',
-      '  - name: Person B\n    color: "#B5473C"\n  - name: Person A\n    color: "#3565A8"\neventTypes:',
-    );
-    const duplicateConfig = configYaml.replace(
-      "  - code: OFF\n    label: Off",
-      "  - code: AL\n    label: Off",
-    );
+    const duplicatePersonName = JSON.stringify({
+      ...config,
+      people: [...config.people, { name: "Person A", color: "#3565A8" }],
+    });
+    const duplicateConfig = JSON.stringify({
+      ...config,
+      eventTypes: config.eventTypes.map((eventType) =>
+        eventType.code === "OFF" ? { ...eventType, code: "AL" } : eventType,
+      ),
+    });
     expect(() => parseCalendarConfig(duplicatePersonName)).toThrow(
       "Person name is assigned more than once",
     );
@@ -53,17 +49,23 @@ describe("parseCalendarConfig", () => {
   });
 
   it("rejects invalid colors and type codes", () => {
-    const invalidConfig = configYaml
-      .replace("#26734D", "green")
-      .replace("code: AL", "code: al");
+    const invalidConfig = JSON.stringify({
+      ...config,
+      people: config.people.map((person, index) =>
+        index === 0 ? { ...person, color: "green" } : person,
+      ),
+      eventTypes: config.eventTypes.map((eventType) =>
+        eventType.code === "AL" ? { ...eventType, code: "al" } : eventType,
+      ),
+    });
     expect(() => parseCalendarConfig(invalidConfig)).toThrow(
-      "Invalid chronos-config.yml",
+      "Invalid CHRONOS_CONFIG_JSON",
     );
   });
 });
 
 describe("normalizeCalendarEvent", () => {
-  const config = parseCalendarConfig(configYaml);
+  const parsedConfig = parseCalendarConfig(configJson);
 
   it.each([
     ["(AL) Person A", "AL", "Annual Leave", "Person A"],
@@ -71,7 +73,7 @@ describe("normalizeCalendarEvent", () => {
     ["(PH) Holiday", "PH", "Public Holiday", "Holiday"],
     ["(XYZ) Custom Event", "XYZ", "Custom", "Custom Event"],
   ])("parses %s", (summary, code, label, subject) => {
-    const normalized = normalizeCalendarEvent({ summary }, config);
+    const normalized = normalizeCalendarEvent({ summary }, parsedConfig);
     expect(normalized).toMatchObject({
       subject,
       type: { code, label },
@@ -85,7 +87,7 @@ describe("normalizeCalendarEvent", () => {
         start: { date: "2026-11-26" },
         end: { date: "2026-11-27" },
       },
-      config,
+      parsedConfig,
     );
     expect(normalized).toEqual({
       startDate: "2026-11-26",
@@ -110,7 +112,7 @@ describe("normalizeCalendarEvent", () => {
             timeZone: "Asia/Singapore",
           },
         },
-        config,
+        parsedConfig,
       ),
     ).toEqual({
       startDate: "2026-11-26T09:00:00+08:00",
@@ -123,7 +125,7 @@ describe("normalizeCalendarEvent", () => {
 
   it("keeps unmatched text as a subject and unknown type code", () => {
     expect(
-      normalizeCalendarEvent({ summary: "(OTHER) Holiday" }, config),
+      normalizeCalendarEvent({ summary: "(OTHER) Holiday" }, parsedConfig),
     ).toEqual({
       startDate: null,
       endDate: null,
@@ -135,7 +137,7 @@ describe("normalizeCalendarEvent", () => {
 
   it("leaves malformed titles unclassified", () => {
     expect(
-      normalizeCalendarEvent({ summary: "OFF-PM Person A" }, config),
+      normalizeCalendarEvent({ summary: "OFF-PM Person A" }, parsedConfig),
     ).toEqual({
       startDate: null,
       endDate: null,
@@ -152,7 +154,7 @@ describe("normalizeCalendarEvent", () => {
           summary: "(GD) Team event",
           description: "Participants: Person A and person b. Contact Person A.",
         },
-        config,
+        parsedConfig,
       ),
     ).toMatchObject({
       people: [
@@ -166,7 +168,7 @@ describe("normalizeCalendarEvent", () => {
     expect(
       normalizeCalendarEvent(
         { summary: "(GD) Team event", description: "Everyone is invited" },
-        config,
+        parsedConfig,
       ).people,
     ).toEqual([
       { name: "Person A", color: "#26734D" },
@@ -181,7 +183,7 @@ describe("normalizeCalendarEvent", () => {
           summary: "invalid title",
           description: "Person Aardvark is attending",
         },
-        config,
+        parsedConfig,
       ).people,
     ).toEqual([]);
   });

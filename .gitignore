@@ -28,4 +28,4 @@ pnpm-debug.log*
 credentials.json
 
 # configuration files
-chronos-config.yml
+chronos-config.json
