@@ -10,12 +10,12 @@ import "@styles/global.css";
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>Chronos</title>
+    <meta name="description" content="A simple attendance tracker" />
+
     <script is:inline>
       const savedTheme = localStorage.getItem("theme");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-      const isDark = savedTheme
-        ? savedTheme === "dark"
-        : prefersDark.matches;
+      const isDark = savedTheme ? savedTheme === "dark" : prefersDark.matches;
 
       document.documentElement.classList.toggle("dark", isDark);
 

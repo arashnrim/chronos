@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("astro:env/server", () => ({ CHRONOS_CONFIG_JSON: "{}" }));
 
-import { parseCalendarConfig } from "./calendar-config";
+import { parseChronosConfig } from "./calendar-config";
 import { normalizeCalendarEvent } from "./normalize-events";
 
 const config = {
@@ -20,11 +20,11 @@ const configJson = JSON.stringify(config);
 
 describe("parseCalendarConfig", () => {
   it("parses configured people and event types", () => {
-    expect(parseCalendarConfig(configJson)).toEqual(config);
+    expect(parseChronosConfig(configJson)).toEqual(config);
   });
 
   it("rejects malformed JSON", () => {
-    expect(() => parseCalendarConfig('{"people":')).toThrow(
+    expect(() => parseChronosConfig('{"people":')).toThrow(
       "Invalid JSON in CHRONOS_CONFIG_JSON",
     );
   });
@@ -40,10 +40,10 @@ describe("parseCalendarConfig", () => {
         eventType.code === "OFF" ? { ...eventType, code: "AL" } : eventType,
       ),
     });
-    expect(() => parseCalendarConfig(duplicatePersonName)).toThrow(
+    expect(() => parseChronosConfig(duplicatePersonName)).toThrow(
       "Person name is assigned more than once",
     );
-    expect(() => parseCalendarConfig(duplicateConfig)).toThrow(
+    expect(() => parseChronosConfig(duplicateConfig)).toThrow(
       "Duplicate event type code: AL",
     );
   });
@@ -58,14 +58,14 @@ describe("parseCalendarConfig", () => {
         eventType.code === "AL" ? { ...eventType, code: "al" } : eventType,
       ),
     });
-    expect(() => parseCalendarConfig(invalidConfig)).toThrow(
+    expect(() => parseChronosConfig(invalidConfig)).toThrow(
       "Invalid CHRONOS_CONFIG_JSON",
     );
   });
 });
 
 describe("normalizeCalendarEvent", () => {
-  const parsedConfig = parseCalendarConfig(configJson);
+  const parsedConfig = parseChronosConfig(configJson);
 
   it.each([
     ["(AL) Person A", "AL", "Annual Leave", "Person A"],

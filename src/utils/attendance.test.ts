@@ -72,10 +72,10 @@ describe("daily attendance", () => {
 describe("capacity levels", () => {
   it.each([
     [0, 0, null],
-    [1, 4, "red"],
-    [2, 4, "orange"],
-    [3, 4, "orange"],
-    [4, 4, "green"],
+    [1, 4, "low"],
+    [2, 4, "medium"],
+    [3, 4, "medium"],
+    [4, 4, "high"],
   ])("classifies %i of %i as %s", (present, total, expected) => {
     expect(getCapacityLevel(present, total)).toBe(expected);
   });

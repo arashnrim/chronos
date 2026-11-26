@@ -1,18 +1,20 @@
 import { createContext, useContext } from "react";
 import type { DayButton } from "react-day-picker";
 import { Calendar, CalendarDayButton } from "@root/src/components/ui/calendar";
-import { getAttendance, getCapacityLevel } from "@utils/attendance";
+import {
+  getAttendance,
+  getCapacityLevel,
+  capacityLevelColors,
+} from "@utils/attendance";
 import type { CalendarData } from "./use-attendance-data";
 
-const AttendanceContext = createContext<CalendarData | null>(null);
-const levelColors = {
-  red: "text-red-700 dark:text-red-400",
-  orange: "text-orange-800 dark:text-orange-400",
-  green: "text-green-700 dark:text-green-400",
-};
+const AttendanceContext = createContext<{
+  data: CalendarData | null;
+  isLoading: boolean;
+}>({ data: null, isLoading: false });
 
 function AttendanceDayButton(props: React.ComponentProps<typeof DayButton>) {
-  const data = useContext(AttendanceContext);
+  const { data, isLoading } = useContext(AttendanceContext);
   const attendance =
     data && getAttendance(props.day.date, data.people, data.events);
   const level =
@@ -31,16 +33,22 @@ function AttendanceDayButton(props: React.ComponentProps<typeof DayButton>) {
           : label
       }
     >
-      <span className="!text-lg font-medium !opacity-100">
+      <span className="!text-xl font-semibold !opacity-100">
         {props.children}
       </span>
       {level && attendance && (
         <span
           aria-hidden="true"
-          className={`!text-[10px] font-semibold leading-none tabular-nums !opacity-100 ${levelColors[level]}`}
+          className={`!text-xs font-light leading-none !opacity-100 ${capacityLevelColors[level]}`}
         >
           {attendance.peopleIn.length}
         </span>
+      )}
+      {!level && isLoading && (
+        <span
+          aria-hidden="true"
+          className="h-2 w-4 animate-pulse rounded-sm bg-muted"
+        />
       )}
     </CalendarDayButton>
   );
@@ -48,19 +56,21 @@ function AttendanceDayButton(props: React.ComponentProps<typeof DayButton>) {
 
 export function AttendanceCalendarGrid({
   data,
+  isLoading,
   selected,
   month,
   onSelect,
   onMonthChange,
 }: {
   data: CalendarData | null;
+  isLoading: boolean;
   selected: Date;
   month: Date;
   onSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
 }) {
   return (
-    <AttendanceContext.Provider value={data}>
+    <AttendanceContext.Provider value={{ data, isLoading }}>
       <Calendar
         mode="single"
         required

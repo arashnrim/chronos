@@ -1,9 +1,12 @@
 import { AttendanceCalendarGrid } from "@components/attendance-calendar-grid";
-import { PeopleList } from "@components/people-list";
+import { PeopleList, PeopleListLoading } from "@components/people-list";
 import { Button } from "@components/ui/button";
-import { Spinner } from "@components/ui/spinner";
 import { useAttendanceData } from "@components/use-attendance-data";
-import { getAttendance, nextWeekday } from "@utils/attendance";
+import {
+  getAttendance,
+  getCapacityLevel,
+  nextWeekday,
+} from "@utils/attendance";
 import { useState } from "react";
 
 export default function AttendanceCalendar() {
@@ -15,11 +18,16 @@ export default function AttendanceCalendar() {
   const attendance = data
     ? getAttendance(selected, data.people, data.events)
     : null;
+  const capacityLevel =
+    attendance && data
+      ? getCapacityLevel(attendance.peopleIn.length, data.people.length)
+      : null;
 
   return (
     <>
       <AttendanceCalendarGrid
         data={data}
+        isLoading={state.status === "loading"}
         selected={selected}
         onSelect={setSelected}
         month={month}
@@ -34,7 +42,7 @@ export default function AttendanceCalendar() {
       />
 
       <div className="mt-8" aria-live="polite">
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-xl font-bold">
           {selected.toLocaleDateString(undefined, {
             weekday: "long",
             month: "long",
@@ -43,9 +51,9 @@ export default function AttendanceCalendar() {
           })}
         </h2>
         {state.status === "loading" && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner aria-hidden="true" />
-            <span>Loading attendance...</span>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <PeopleListLoading title="People in" />
+            <PeopleListLoading title="People out" />
           </div>
         )}
         {(state.status === "error" || state.status === "unauthorized") && (
@@ -74,8 +82,16 @@ export default function AttendanceCalendar() {
               </p>
             )}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <PeopleList title="People in" people={attendance.peopleIn} />
-              <PeopleList title="People out" people={attendance.peopleOut} />
+              <PeopleList
+                title="People in"
+                people={attendance.peopleIn}
+                capacityLevel={capacityLevel}
+              />
+              <PeopleList
+                title="People out"
+                people={attendance.peopleOut}
+                capacityLevel={capacityLevel}
+              />
             </div>
           </>
         )}

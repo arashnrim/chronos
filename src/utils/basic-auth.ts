@@ -1,11 +1,11 @@
+import { API_SECRET } from "astro:env/server";
 import type { Person } from "./attendance";
 
-export const isBasicAuthAuthorized = (
+export const isAuthorized = (
   authorization: string | null,
-  apiSecret: string | undefined,
   people: readonly Person[],
 ) => {
-  if (!apiSecret) return false;
+  if (!authorization) return false;
 
   const match = authorization?.match(/^Basic\s+([A-Za-z0-9+/]+={0,2})$/i);
   if (!match) return false;
@@ -21,7 +21,7 @@ export const isBasicAuthAuthorized = (
     const username = credentials.slice(0, separator);
     const password = credentials.slice(separator + 1);
     return (
-      password === apiSecret &&
+      password === API_SECRET &&
       people.some(
         (person) => person.name.toLowerCase() === username.toLowerCase(),
       )

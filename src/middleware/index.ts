@@ -1,13 +1,11 @@
-import { defineMiddleware } from "astro:middleware";
-import { API_SECRET } from "astro:env/server";
+import { isAuthorized } from "@utils/basic-auth";
 import { calendarConfig } from "@utils/calendar-config";
-import { isBasicAuthAuthorized } from "@utils/basic-auth";
+import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware((context, next) => {
   if (context.url.pathname.startsWith("/api/")) {
-    const authorized = isBasicAuthAuthorized(
+    const authorized = isAuthorized(
       context.request.headers.get("Authorization"),
-      API_SECRET,
       calendarConfig.people,
     );
 

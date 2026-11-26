@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { CHRONOS_CONFIG_JSON } from "astro:env/server";
+import { z } from "zod";
 
 const nonEmptyString = z.string().trim().min(1);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
@@ -18,7 +18,7 @@ const eventTypeSchema = z
   })
   .strict();
 
-const calendarConfigSchema = z
+const configSchema = z
   .object({
     people: z.array(personSchema).default([]),
     eventTypes: z.array(eventTypeSchema).default([]),
@@ -50,9 +50,9 @@ const calendarConfigSchema = z
     }
   });
 
-export type CalendarConfig = z.infer<typeof calendarConfigSchema>;
+export type ChronosConfig = z.infer<typeof configSchema>;
 
-export const parseCalendarConfig = (source: string): CalendarConfig => {
+export const parseChronosConfig = (source: string): ChronosConfig => {
   let document: unknown;
   try {
     document = JSON.parse(source);
@@ -61,7 +61,7 @@ export const parseCalendarConfig = (source: string): CalendarConfig => {
     throw new Error(`Invalid JSON in CHRONOS_CONFIG_JSON: ${message}`);
   }
 
-  const result = calendarConfigSchema.safeParse(document);
+  const result = configSchema.safeParse(document);
   if (!result.success) {
     const details = result.error.issues
       .map((issue) => `${issue.path.join(".") || "config"}: ${issue.message}`)
@@ -72,4 +72,4 @@ export const parseCalendarConfig = (source: string): CalendarConfig => {
   return result.data;
 };
 
-export const calendarConfig = parseCalendarConfig(CHRONOS_CONFIG_JSON);
+export const calendarConfig = parseChronosConfig(CHRONOS_CONFIG_JSON);

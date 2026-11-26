@@ -65,10 +65,16 @@ export const getAttendance = (
 export const getCapacityLevel = (
   peopleIn: number,
   total: number,
-): "red" | "orange" | "green" | null => {
+): "low" | "medium" | "high" | null => {
   if (total === 0) return null;
   const capacity = peopleIn / total;
-  if (capacity < 0.5) return "red";
-  if (capacity <= 0.75) return "orange";
-  return "green";
+  if (capacity < 0.5) return "low";
+  if (capacity <= 0.75) return "medium";
+  return "high";
+};
+
+export const capacityLevelColors = {
+  low: "text-red-700 dark:text-red-400",
+  medium: "text-orange-800 dark:text-orange-400",
+  high: "text-green-700 dark:text-green-400",
 };

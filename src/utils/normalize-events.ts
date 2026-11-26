@@ -1,4 +1,4 @@
-import type { CalendarConfig } from "@utils/calendar-config";
+import type { ChronosConfig } from "@utils/calendar-config";
 
 type CalendarEventLike = {
   summary?: string | null;
@@ -14,10 +14,10 @@ type CalendarEventDateTime = {
 };
 
 type EventTypeLabel = Pick<
-  CalendarConfig["eventTypes"][number],
+  ChronosConfig["eventTypes"][number],
   "code" | "label"
 >;
-type PersonLabel = Pick<CalendarConfig["people"][number], "name" | "color">;
+type PersonLabel = Pick<ChronosConfig["people"][number], "name" | "color">;
 
 export type NormalizedCalendarEvent = {
   startDate: string | null;
@@ -44,7 +44,7 @@ const descriptionIncludesPerson = (
 
 export const normalizeCalendarEvent = (
   event: CalendarEventLike,
-  config: CalendarConfig,
+  config: ChronosConfig,
 ): NormalizedCalendarEvent => {
   const match = event.summary?.match(titlePattern);
   const subject = match?.[3].trim() ?? null;
@@ -93,7 +93,7 @@ export const normalizeCalendarEvent = (
 
 export const normalizeCalendarEvents = (
   events: readonly CalendarEventLike[],
-  config: CalendarConfig,
+  config: ChronosConfig,
 ): NormalizedCalendarEvent[] => {
   return events.map((event) => normalizeCalendarEvent(event, config));
 };
