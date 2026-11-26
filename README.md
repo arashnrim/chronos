@@ -1,56 +1,74 @@
-# Astro Starter Kit: Minimal
+# chronos
 
-```sh
-pnpm create astro@latest -- --template minimal
-```
+Welcome to the repository for Chronos, a web UI for seeing at-a-glance info of availability based on a shared calendar in Google Calendar. The idea is pretty rudimentary and it's likely that you'll find other implementations that do all this and more, but this serves the use case I'm looking for with my specific requirements.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Motivations
 
-## 🚀 Project Structure
+My current team keeps track of offs, leaves, and other general unavailabilities through a shared calendar on Google Calendar. While this gives easy-to-see, at-a-glance info of who would be unavailable, there isn't a way to see who's left. This little tool was therefore built to quickly determine this, based on a config file.
 
-Inside of your Astro project, you'll see the following folders and files:
+## Getting started
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+You'll need to do some setting up before you're able to use this project. Work is underway to make it easier to set up — stay tuned!
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+1. Calendar set-up
+2. Service account set-up
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+### Calendar set-up
 
-Any static assets, like images, can be placed in the `public/` directory.
+1. [Create a new calendar](https://support.google.com/calendar/answer/37095). Open Google Calendar, select "Add other calendars", then "Create new calendar". Enter a name for the calendar, then click on the "Create calendar" button.
+2. Once created, select "Configure" at the bottom of the screen or select the name of the calendar under "Settings for my calendars".
+3. Navigate to the "Integrate calendar" tab and note the calendar ID. You'll need this for later!
+4. Share the calendar with other people.
 
-## 🧞 Commands
+When creating events in the calendar, keep in mind the following:
 
-All commands are run from the root of the project, from a terminal:
+- Create events as all-day events, even for half-day events.
+- Use the following format for event names:
 
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `pnpm install`         | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+  ```
+  (<TYPE>[-AM|-PM]) <SUBJECT/PERSON>
+  ```
 
-## 👀 Want to learn more?
+  where:
+  - `<TYPE>` refers to a shorthand code that you can configure later (e.g. `OFF` for offs, `AL` for annual leaves)
+  - `[-AM|-PM]` are optional modifiers to denote half-day events (e.g. `OFF-AM`)
+  - `<SUBJECT/PERSON>` refers to the name of the event or person (e.g. `John Smith`, `New Year's Day`). While the name of the person is read case-insensitively, you should check that the spelling is accurate; not doing so might mean a missed event.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+### Service account set-up
 
-## Calendar configuration
+0. [Create a new project](https://console.cloud.google.com/projectcreate) if you don't have one.
+1. Navigate to the [service accounts page](https://console.cloud.google.com/iam-admin/serviceaccounts) and select "Create service account".
+2. Fill in the service account name and ID fields with an appropriate name of your choosing, then select "Create and continue". Select "Done".
+3. Select the service account you just created, then navigate to the "Keys" tab.
+4. Select "Add key", then choose "Create new key". Choose JSON as the key type.
+5. Save the generated file as `credentials.json` somewhere you can access it.
+6. Open `credentials.json` and note the value of `client_email`.
+7. Navigate to your created calendar's settings, then select the "Shared with" tab.
+8. Select "Add people and groups", then enter the `client_email` with the permission minimally at "See event details". Select "Send" once done.
 
-Edit `chronos-config.yml` to configure people and event types. Each person has a unique calendar name and color. The trailing text in an event title must match that name exactly. Event type codes are matched against the code in parentheses.
+### Project configuration
 
-```yaml
-people: [{ name: "Person A", color: "#26734D" }]
-eventTypes: [{ code: AL, label: "Annual Leave" }]
-```
+1. Create a file named `chronos-config.json`, and fill it with the following schema. This configures Chronos to match the name of the person in the event to the right event type.
 
-Calendar event titles use `(<TYPE>[-AM|-PM]) <PERSON OR SUBJECT>`, such as `(AL) Person A`, `(OFF-PM) Person B`, `(PH) Holiday`, or `(XYZ) Custom Event`. The optional period is parsed but not returned separately. If the trailing text does not exactly match a configured person name, it is returned as the subject. The event description is also searched for complete configured person names, case-insensitively, so one event can be associated with multiple people. If the description contains the complete word `everyone`, all configured people are associated with the event. Matched people include their configured color; event types have no color. Unknown type codes use the code as their fallback label; malformed titles have null `subject` and `type` fields, but can still have matched `people`.
+   ```json
+   {
+     "people": [
+       { "name": "Person A", "color": "#1A2B3C" },
+       { "name": "Person B", "color": "#4D5E6F" }
+     ],
+     "eventTypes": [
+       { "code": "AL", "label": "Annual Leave" },
+       { "code": "MC", "label": "Medical Certificate" }
+     ]
+   }
+   ```
 
-The `/api/events` response keeps its `{ events }` envelope and reduces each event to `startDate`, `endDate`, `subject`, `people`, and `type`. `people` contains all matches from the title and description. All-day events use Calendar's `date` values; timed events use `dateTime` values. Configuration is bundled at build time, so config changes require a new deployment.
+2. Create a copy of `.env.template` as `.env`, then populate the values as such:
+   - `API_SECRET` is the password for the user to enter to authenticate and use the platform.
+   - `CALENDAR_ID` is the ID found in the "Integrate calendar" tab of the calendar's settings page.
+   - `GOOGLE_CREDENTIALS_JSON` is a one-line, compact string of the `credentials.json` file. Wrap the string with single quotation marks (i.e. `'{"type":...}'`)
+   - `CHRONOS_CONFIG_JSON` is a one-line compact string of the `chronos-config.json` file. Wrap the string with single quotation marks (i.e. `'{"people":...}'`)
+
+## Licence
+
+This project is made open source with the [MIT Licence](https://github.com/arashnrim/chronos/blob/main/LICENSE.md). Have a look at the licence to know what you're allowed to do.
