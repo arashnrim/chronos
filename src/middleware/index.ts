@@ -1,15 +1,22 @@
 import { defineMiddleware } from "astro:middleware";
 import { API_SECRET } from "astro:env/server";
+import { calendarConfig } from "@utils/calendar-config";
+import { isBasicAuthAuthorized } from "@utils/basic-auth";
 
 export const onRequest = defineMiddleware((context, next) => {
-  // Reject requests to /api/* endpoints if the Authorization header does not match the API_SECRET
-  if (!import.meta.env.DEV && context.url.pathname.startsWith("/api/")) {
-    const authorization = context.request.headers.get("Authorization");
+  if (context.url.pathname.startsWith("/api/")) {
+    const authorized = isBasicAuthAuthorized(
+      context.request.headers.get("Authorization"),
+      API_SECRET,
+      calendarConfig.people,
+    );
 
-    if (!API_SECRET || authorization !== `Bearer ${API_SECRET}`) {
+    if (!authorized) {
       return new Response(null, {
         status: 401,
-        headers: { "WWW-Authenticate": "Bearer" },
+        headers: {
+          "WWW-Authenticate": 'Basic charset="UTF-8"',
+        },
       });
     }
   }

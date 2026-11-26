@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import type { Person } from "@utils/attendance";
 import type { NormalizedCalendarEvent } from "@utils/normalize-events";
+import { useEffect, useState } from "react";
 
 export type CalendarData = {
   people: Person[];
@@ -18,7 +18,6 @@ function monthParameter(date: Date, offset: number) {
 }
 
 export function useAttendanceData(month: Date) {
-  const [secret, setSecret] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const monthKey = monthParameter(month, 0);
@@ -28,9 +27,6 @@ export function useAttendanceData(month: Date) {
     setState({ status: "loading" });
 
     const load = async () => {
-      const headers = secret
-        ? { Authorization: `Bearer ${secret}` }
-        : undefined;
       const urls = [
         "/api/people",
         ...[-1, 0, 1].map(
@@ -38,7 +34,12 @@ export function useAttendanceData(month: Date) {
         ),
       ];
       const responses = await Promise.all(
-        urls.map((url) => fetch(url, { headers, signal: controller.signal })),
+        urls.map((url) =>
+          fetch(url, {
+            credentials: "same-origin",
+            signal: controller.signal,
+          }),
+        ),
       );
       if (responses.some((response) => response.status === 401)) {
         setState({ status: "unauthorized" });
@@ -64,13 +65,9 @@ export function useAttendanceData(month: Date) {
       if (!controller.signal.aborted) setState({ status: "error" });
     });
     return () => controller.abort();
-  }, [monthKey, secret, attempt]);
+  }, [monthKey, attempt]);
 
   const retry = () => setAttempt((value) => value + 1);
-  const connect = (value: string) => {
-    if (value === secret) retry();
-    else setSecret(value);
-  };
 
-  return { state, retry, connect };
+  return { state, retry };
 }

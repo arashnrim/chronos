@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { Button } from "@root/src/components/ui/button";
-import { AttendanceCalendarGrid } from "./attendance-calendar-grid";
-import { PeopleList } from "./people-list";
-import { useAttendanceData } from "./use-attendance-data";
+import { AttendanceCalendarGrid } from "@components/attendance-calendar-grid";
+import { PeopleList } from "@components/people-list";
+import { Button } from "@components/ui/button";
+import { Spinner } from "@components/ui/spinner";
+import { useAttendanceData } from "@components/use-attendance-data";
 import { getAttendance, nextWeekday } from "@utils/attendance";
+import { useState } from "react";
 
 export default function AttendanceCalendar() {
   const [selected, setSelected] = useState(() => nextWeekday(new Date()));
   const [month, setMonth] = useState(() => new Date(selected));
-  const [secretInput, setSecretInput] = useState("");
-  const { state, retry, connect } = useAttendanceData(month);
+  const { state, retry } = useAttendanceData(month);
 
   const data = state.status === "ready" ? state.data : null;
   const attendance = data
@@ -43,45 +43,28 @@ export default function AttendanceCalendar() {
           })}
         </h2>
         {state.status === "loading" && (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Loading attendance...
-          </p>
-        )}
-        {state.status === "error" && (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <p className="text-sm text-destructive">
-              Could not load attendance.
-            </p>
-            <Button variant="outline" size="sm" onClick={retry}>
-              Retry
-            </Button>
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Spinner aria-hidden="true" />
+            <span>Loading attendance...</span>
           </div>
         )}
-        {state.status === "unauthorized" && (
-          <form
-            className="mt-4 flex flex-wrap items-end gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              connect(secretInput);
-            }}
-          >
-            <p className="w-full text-sm text-muted-foreground">
-              Enter a valid API secret to load attendance.
+        {(state.status === "error" || state.status === "unauthorized") && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p
+              className={
+                state.status === "error"
+                  ? "text-sm text-destructive"
+                  : "text-sm text-muted-foreground"
+              }
+            >
+              {state.status === "error"
+                ? "Could not load attendance."
+                : "Halt! Who goes there? Enter your name and the password to continue."}
             </p>
-            <label className="grid gap-2 text-sm font-medium">
-              API secret
-              <input
-                className="h-9 rounded-md border bg-background px-3 font-normal"
-                type="password"
-                value={secretInput}
-                onChange={(event) => setSecretInput(event.target.value)}
-                required
-              />
-            </label>
-            <Button type="submit" size="sm">
-              Connect
+            <Button variant="outline" size="sm" onClick={retry}>
+              {state.status === "unauthorized" ? "Enter password" : "Retry"}
             </Button>
-          </form>
+          </div>
         )}
         {attendance && data && (
           <>
