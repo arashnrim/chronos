@@ -1,11 +1,15 @@
 ---
-import BaseLayout from "@layouts/BaseLayout.astro";
 import AttendanceCalendar from "@components/attendance-calendar";
+import ThemeToggle from "@components/theme-toggle.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
 ---
 
 <BaseLayout>
   <main class="mx-auto w-full max-w-[960px] px-4 py-10 sm:px-6 sm:py-16">
-    <h1 class="mb-6 text-2xl font-semibold tracking-normal">Calendar</h1>
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <h1 class="text-2xl font-semibold tracking-normal">Chronos</h1>
+      <ThemeToggle />
+    </div>
     <AttendanceCalendar client:only="react" />
   </main>
 </BaseLayout>
