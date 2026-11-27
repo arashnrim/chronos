@@ -10,8 +10,10 @@ My current team keeps track of offs, leaves, and other general unavailabilities 
 
 You'll need to do some setting up before you're able to use this project. Work is underway to make it easier to set up — stay tuned!
 
-1. Calendar set-up
-2. Service account set-up
+1. [Calendar set-up](#calendar-set-up)
+2. [Service account set-up](#service-account-set-up)
+3. [Project configuration](#project-configuration)
+4. [Deployment](#deployment)
 
 ### Calendar set-up
 
@@ -48,7 +50,17 @@ When creating events in the calendar, keep in mind the following:
 
 ### Project configuration
 
-1. Create a file named `chronos-config.json`, and fill it with the following schema. This configures Chronos to match the name of the person in the event to the right event type.
+To run this project, you'll need any Node.js package manager with a Node.js runtime. At least [`pnpm@12`](https://pnpm.io/) is recommended.
+
+0. Clone this repository at a location of your choosing.
+
+   ```sh
+   cd [location]
+   git clone https://github.com/arashnrim/chronos.git
+   cd chronos
+   ```
+
+1. Create a copy of `chronos-config.template.json` as `chronos-config.json`, and fill it with the following schema. This configures Chronos to match the name of the person in the event to the right event type.
 
    ```json
    {
@@ -68,6 +80,24 @@ When creating events in the calendar, keep in mind the following:
    - `CALENDAR_ID` is the ID found in the "Integrate calendar" tab of the calendar's settings page.
    - `GOOGLE_CREDENTIALS_JSON` is a one-line, compact string of the `credentials.json` file. Wrap the string with single quotation marks (i.e. `'{"type":...}'`)
    - `CHRONOS_CONFIG_JSON` is a one-line compact string of the `chronos-config.json` file. Wrap the string with single quotation marks (i.e. `'{"people":...}'`)
+
+### Deployment
+
+If running locally, run the `dev` script:
+
+```sh
+pnpm run dev
+# or
+npm run dev
+```
+
+Alternatively, if building for hosting, run the `build` script:
+
+```sh
+pnpm run build
+# or
+npm run build
+```
 
 ## Licence
 
