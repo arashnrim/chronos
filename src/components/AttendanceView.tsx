@@ -1,3 +1,4 @@
+import { AuthPopup } from "@components/AuthPopup";
 import { SelectedDayBreakdown } from "@components/SelectedDayBreakdown";
 import { useAttendanceData } from "@hooks/useAttendanceData";
 import { AttendanceCalendar } from "@root/src/components/AttendanceCalendar";
@@ -8,25 +9,15 @@ const AttendanceView = () => {
   const [selected, setSelected] = useState(() => nextWeekday(new Date()));
   const [month, setMonth] = useState(() => new Date(selected));
   const { state, retry } = useAttendanceData(month);
+  const [authAttempt, setAuthAttempt] = useState<number | null>(null);
 
   useEffect(() => {
     if (state.status === "unauthorized") {
-      window.dispatchEvent(
-        new CustomEvent("chronos:auth-required", {
-          detail: { attempt: state.attempt },
-        }),
-      );
+      setAuthAttempt(state.attempt);
     } else if (state.status === "ready") {
-      window.dispatchEvent(new Event("chronos:auth-restored"));
+      setAuthAttempt(null);
     }
   }, [state]);
-
-  useEffect(() => {
-    const handleAuthRetry = () => retry();
-    window.addEventListener("chronos:auth-retry", handleAuthRetry);
-    return () =>
-      window.removeEventListener("chronos:auth-retry", handleAuthRetry);
-  }, [retry]);
 
   const data = state.status === "ready" ? state.data : null;
   const attendance = data
@@ -35,6 +26,9 @@ const AttendanceView = () => {
 
   return (
     <>
+      {authAttempt !== null && (
+        <AuthPopup attempt={authAttempt} onRetry={retry} />
+      )}
       <AttendanceCalendar
         data={data}
         isLoading={state.status === "loading"}

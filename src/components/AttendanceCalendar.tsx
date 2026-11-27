@@ -6,7 +6,7 @@ import {
 } from "@utils/attendance";
 import { createContext, useContext } from "react";
 import type { DayButton } from "react-day-picker";
-import type { CalendarData } from "../hooks/useAttendanceData";
+import type { CalendarData } from "@hooks/useAttendanceData";
 
 const AttendanceContext = createContext<{
   data: CalendarData | null;
@@ -17,7 +17,7 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
   const { data, isLoading } = useContext(AttendanceContext);
   const attendance =
     data && getAttendance(props.day.date, data.people, data.events);
-  const level =
+  const capacityLevel =
     attendance &&
     data &&
     getCapacityLevel(attendance.peopleIn.length, data.people.length);
@@ -28,7 +28,7 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
       {...props}
       className="mx-auto w-full max-w-12 sm:max-w-18"
       aria-label={
-        level && data && attendance
+        capacityLevel && data && attendance
           ? `${label}, ${attendance.peopleIn.length} of ${data.people.length} people in`
           : label
       }
@@ -36,19 +36,19 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
       <span className="!text-xl font-semibold !opacity-100">
         {props.children}
       </span>
-      {level && attendance && (
+      {capacityLevel && attendance && (
         <span
           aria-hidden="true"
           className={`!text-xs font-light leading-none !opacity-100 ${
             props.modifiers.selected
               ? "text-primary-muted"
-              : capacityLevelColors[level]
+              : capacityLevelColors[capacityLevel]
           }`}
         >
           {attendance.peopleIn.length}
         </span>
       )}
-      {!level && isLoading && (
+      {!capacityLevel && isLoading && (
         <span
           aria-hidden="true"
           className="h-2 w-4 animate-pulse rounded-sm bg-muted"

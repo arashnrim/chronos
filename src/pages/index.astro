@@ -1,5 +1,4 @@
 ---
-import AuthPopup from "@components/AuthPopup.astro";
 import ThemeToggle from "@components/ThemeToggle.astro";
 import BaseLayout from "@layouts/BaseLayout.astro";
 import AttendanceView from "@root/src/components/AttendanceView";
@@ -11,7 +10,6 @@ import AttendanceView from "@root/src/components/AttendanceView";
       <h1 class="text-3xl font-bold">Chronos</h1>
       <ThemeToggle />
     </div>
-    <AuthPopup />
     <AttendanceView client:only="react" />
   </main>
 </BaseLayout>
