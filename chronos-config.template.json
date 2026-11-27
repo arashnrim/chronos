@@ -4,7 +4,7 @@
     { "name": "Person B", "color": "#4D5E6F" }
   ],
   "eventTypes": [
-    { "code": "AL", "label": "Annual Leave" },
+    { "code": "AL", "label": "Annual Leave", "priority": 1 },
     { "code": "MC", "label": "Medical Certificate" }
   ]
 }

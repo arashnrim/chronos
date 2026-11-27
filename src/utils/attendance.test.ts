@@ -14,7 +14,7 @@ const event = (
   endDate: "2026-11-28",
   subject: "Alex",
   people: [people[0]],
-  type: { code: "AL", label: "Annual Leave" },
+  type: { code: "AL", label: "Annual Leave", priority: 1 },
   ...overrides,
 });
 
@@ -42,15 +42,27 @@ describe("daily attendance", () => {
     ).toEqual([]);
   });
 
-  it("combines reasons without counting a person twice", () => {
+  it("shows only the highest-priority reason without counting a person twice", () => {
     const events = [
       event(),
       event(),
-      event({ type: { code: "OFF", label: "Off" } }),
+      event({ type: { code: "OFF", label: "Off", priority: 5 } }),
+      event({ type: { code: "GD", label: "Guard Duty", priority: 10 } }),
     ];
     expect(
       getAttendance(new Date(2026, 10, 26), people, events).peopleOut,
-    ).toEqual([{ ...people[0], reasons: ["Annual Leave", "Off"] }]);
+    ).toEqual([{ ...people[0], reasons: ["Guard Duty"] }]);
+  });
+
+  it("treats a missing priority as zero and keeps the first reason on ties", () => {
+    const events = [
+      event({ type: { code: "AL", label: "Annual Leave" } }),
+      event({ type: { code: "OFF", label: "Off", priority: 0 } }),
+      event({ type: { code: "GD", label: "Guard Duty", priority: -1 } }),
+    ];
+    expect(
+      getAttendance(new Date(2026, 10, 26), people, events).peopleOut,
+    ).toEqual([{ ...people[0], reasons: ["Annual Leave"] }]);
   });
 
   it("handles timed events ending at midnight and missing event types", () => {

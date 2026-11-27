@@ -1,28 +1,73 @@
-import type { Person, PersonOut } from "@utils/attendance";
-import { capacityLevelColors, getCapacityLevel } from "@utils/attendance";
 import { Spinner } from "@components/ui/spinner";
+import { IconUserCheck, IconUserX } from "@tabler/icons-react";
+import type { PersonIn, PersonOut } from "@utils/attendance";
+import { capacityLevelColors, getCapacityLevel } from "@utils/attendance";
+import type { ReactNode } from "react";
+
+type ListVariant = "in" | "out";
+
+const titles: Record<ListVariant, string> = {
+  in: "People in",
+  out: "People out",
+};
+
+function PeopleListShell({
+  variant,
+  loading = false,
+  headerContent,
+  children,
+}: {
+  variant: ListVariant;
+  loading?: boolean;
+  headerContent: ReactNode;
+  children: ReactNode;
+}) {
+  const title = titles[variant];
+
+  return (
+    <section
+      className="min-w-0 rounded-lg border bg-card p-5 relative overflow-hidden"
+      aria-label={loading ? `${title} loading` : title}
+      aria-busy={loading || undefined}
+    >
+      {variant === "in" ? (
+        <IconUserCheck
+          className="absolute rotate-350 -right-0 -top-10 opacity-5 dark:opacity-2.5 z-0 w-3/5 h-auto"
+          stroke={2}
+        />
+      ) : (
+        <IconUserX
+          className="absolute rotate-350 -right-0 -top-10 opacity-5 dark:opacity-2.5 z-0 w-3/5 h-auto"
+          stroke={2}
+        />
+      )}
+      <div className="flex items-center justify-between gap-4 border-b pb-4 z-10">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {headerContent}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function PeopleList({
-  title,
+  variant,
   people,
   capacityLevel,
 }: {
-  title: string;
-  people: (Person | PersonOut)[];
+  variant: ListVariant;
+  people: (PersonIn | PersonOut)[];
   capacityLevel: ReturnType<typeof getCapacityLevel>;
 }) {
   return (
-    <section
-      className="min-w-0 rounded-lg border bg-card p-5"
-      aria-label={title}
-    >
-      <div className="flex items-center justify-between gap-4 border-b pb-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
+    <PeopleListShell
+      variant={variant}
+      headerContent={
         <span className="text-sm">
           <span
             className={[
               "font-semibold",
-              title === "People in" && capacityLevel
+              variant === "in" && capacityLevel
                 ? capacityLevelColors[capacityLevel]
                 : "",
             ].join(" ")}
@@ -34,13 +79,14 @@ export function PeopleList({
             {people.length === 1 ? "person" : "people"}
           </span>
         </span>
-      </div>
+      }
+    >
       {people.length === 0 ? (
-        <p className="py-5 text-sm text-muted-foreground">
-          No people {title === "People in" ? "in" : "out"}.
+        <p className="py-5 text-center text-muted-foreground z-10">
+          {variant === "in" ? "Weird leh, no one's in" : "Everyone in liao"}
         </p>
       ) : (
-        <ul className="divide-y">
+        <ul className="divide-y z-10">
           {people.map((person) => (
             <li key={person.name} className="flex items-center gap-3 py-3">
               <span
@@ -60,9 +106,7 @@ export function PeopleList({
                   .toUpperCase()}
               </span>
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold">
-                  {person.name}
-                </p>
+                <p className="break-words font-semibold">{person.name}</p>
                 {"reasons" in person && (
                   <p className="break-words text-xs text-muted-foreground">
                     {person.reasons.join(", ")}
@@ -73,27 +117,27 @@ export function PeopleList({
           ))}
         </ul>
       )}
-    </section>
+    </PeopleListShell>
   );
 }
 
-export function PeopleListLoading({ title }: { title: string }) {
+export function PeopleListLoading({ variant }: { variant: ListVariant }) {
+  const title = titles[variant];
+
   return (
-    <section
-      className="min-w-0 rounded-lg border bg-card p-5"
-      aria-label={`${title} loading`}
-      aria-busy="true"
-    >
-      <div className="flex items-center justify-between gap-4 border-b pb-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
+    <PeopleListShell
+      variant={variant}
+      loading
+      headerContent={
         <span
           aria-hidden="true"
           className="h-4 w-8 animate-pulse rounded bg-muted"
         />
-      </div>
+      }
+    >
       <div className="flex min-h-24 items-center justify-center">
         <Spinner aria-label={`Loading ${title.toLowerCase()}`} />
       </div>
-    </section>
+    </PeopleListShell>
   );
 }

@@ -15,7 +15,7 @@ type CalendarEventDateTime = {
 
 type EventTypeLabel = Pick<
   ChronosConfig["eventTypes"][number],
-  "code" | "label"
+  "code" | "label" | "priority"
 >;
 type PersonLabel = Pick<ChronosConfig["people"][number], "name" | "color">;
 
@@ -87,6 +87,7 @@ export const normalizeCalendarEvent = (
     type: {
       code: typeCode,
       label: configuredType?.label ?? typeCode,
+      priority: configuredType?.priority ?? 0,
     },
   };
 };

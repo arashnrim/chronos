@@ -1,8 +1,9 @@
 import type { NormalizedCalendarEvent } from "@utils/normalize-events";
 
 export type Person = { name: string; color: string };
+export type PersonIn = Person;
 export type PersonOut = Person & { reasons: string[] };
-export type Attendance = { peopleIn: Person[]; peopleOut: PersonOut[] };
+export type Attendance = { peopleIn: PersonIn[]; peopleOut: PersonOut[] };
 
 export const nextWeekday = (date: Date): Date => {
   const weekday = new Date(date);
@@ -37,7 +38,7 @@ export const getAttendance = (
     date.getMonth(),
     date.getDate() + 1,
   );
-  const reasonsByName = new Map<string, Set<string>>();
+  const reasonsByName = new Map<string, { reason: string; priority: number }>();
 
   for (const event of events) {
     if (!event.startDate || !event.endDate) continue;
@@ -46,17 +47,22 @@ export const getAttendance = (
     if (!(start < endOfDay && end > startOfDay)) continue;
 
     for (const person of event.people) {
-      const reasons = reasonsByName.get(person.name) ?? new Set<string>();
-      reasons.add(event.type?.label ?? "Reason unavailable");
-      reasonsByName.set(person.name, reasons);
+      const priority = event.type?.priority ?? 0;
+      const existing = reasonsByName.get(person.name);
+      if (!existing || priority > existing.priority) {
+        reasonsByName.set(person.name, {
+          reason: event.type?.label ?? "Reason unavailable",
+          priority,
+        });
+      }
     }
   }
 
-  const peopleIn: Person[] = [];
+  const peopleIn: PersonIn[] = [];
   const peopleOut: PersonOut[] = [];
   for (const person of people) {
-    const reasons = reasonsByName.get(person.name);
-    if (reasons) peopleOut.push({ ...person, reasons: [...reasons] });
+    const reason = reasonsByName.get(person.name);
+    if (reason) peopleOut.push({ ...person, reasons: [reason.reason] });
     else peopleIn.push(person);
   }
   return { peopleIn, peopleOut };

@@ -69,17 +69,20 @@ To run this project, you'll need any Node.js package manager with a Node.js runt
        { "name": "Person B", "color": "#4D5E6F" }
      ],
      "eventTypes": [
-       { "code": "AL", "label": "Annual Leave" },
+       { "code": "AL", "label": "Annual Leave", "priority": 1 },
        { "code": "MC", "label": "Medical Certificate" }
      ]
    }
    ```
 
+   Event types may include a numeric `priority` (defaults to `0`). If a person has overlapping events, Chronos displays only the reason with the highest priority.
+
 2. Create a copy of `.env.template` as `.env`, then populate the values as such:
    - `API_SECRET` is the password for the user to enter to authenticate and use the platform.
    - `CALENDAR_ID` is the ID found in the "Integrate calendar" tab of the calendar's settings page.
    - `GOOGLE_CREDENTIALS_JSON` is a one-line, compact string of the `credentials.json` file. Wrap the string with single quotation marks (i.e. `'{"type":...}'`)
-   - `CHRONOS_CONFIG_JSON` is a one-line compact string of the `chronos-config.json` file. Wrap the string with single quotation marks (i.e. `'{"people":...}'`)
+   - `CHRONOS_CONFIG_JSON` is a one-line, compact string of the `chronos-config.json` file. Wrap the string with single quotation marks (i.e. `'{"people":...}'`)
+   - Tip: to get a one-line, compact string, you can use VS Code and select "Join lines" from the Command Palette.
 
 ### Deployment
 

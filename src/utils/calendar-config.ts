@@ -15,6 +15,7 @@ const eventTypeSchema = z
   .object({
     code: z.string().regex(/^[A-Z][A-Z0-9]*$/),
     label: nonEmptyString,
+    priority: z.number().optional(),
   })
   .strict();
 

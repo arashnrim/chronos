@@ -10,7 +10,7 @@ const config = {
     { name: "Person B", color: "#B5473C" },
   ],
   eventTypes: [
-    { code: "AL", label: "Annual Leave" },
+    { code: "AL", label: "Annual Leave", priority: 1 },
     { code: "OFF", label: "Off" },
     { code: "PH", label: "Public Holiday" },
     { code: "XYZ", label: "Custom" },
@@ -76,7 +76,7 @@ describe("normalizeCalendarEvent", () => {
     const normalized = normalizeCalendarEvent({ summary }, parsedConfig);
     expect(normalized).toMatchObject({
       subject,
-      type: { code, label },
+      type: { code, label, priority: code === "AL" ? 1 : 0 },
     });
   });
 
@@ -94,7 +94,7 @@ describe("normalizeCalendarEvent", () => {
       endDate: "2026-11-27",
       subject: "Person A",
       people: [{ name: "Person A", color: "#26734D" }],
-      type: { code: "AL", label: "Annual Leave" },
+      type: { code: "AL", label: "Annual Leave", priority: 1 },
     });
   });
 
@@ -119,7 +119,7 @@ describe("normalizeCalendarEvent", () => {
       endDate: "2026-11-26T10:00:00+08:00",
       subject: "Person A",
       people: [{ name: "Person A", color: "#26734D" }],
-      type: { code: "AL", label: "Annual Leave" },
+      type: { code: "AL", label: "Annual Leave", priority: 1 },
     });
   });
 
@@ -131,7 +131,7 @@ describe("normalizeCalendarEvent", () => {
       endDate: null,
       subject: "Holiday",
       people: [],
-      type: { code: "OTHER", label: "OTHER" },
+      type: { code: "OTHER", label: "OTHER", priority: 0 },
     });
   });
 

@@ -52,8 +52,8 @@ export default function AttendanceCalendar() {
         </h2>
         {state.status === "loading" && (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <PeopleListLoading title="People in" />
-            <PeopleListLoading title="People out" />
+            <PeopleListLoading variant="in" />
+            <PeopleListLoading variant="out" />
           </div>
         )}
         {(state.status === "error" || state.status === "unauthorized") && (
@@ -83,12 +83,12 @@ export default function AttendanceCalendar() {
             )}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <PeopleList
-                title="People in"
+                variant="in"
                 people={attendance.peopleIn}
                 capacityLevel={capacityLevel}
               />
               <PeopleList
-                title="People out"
+                variant="out"
                 people={attendance.peopleOut}
                 capacityLevel={capacityLevel}
               />

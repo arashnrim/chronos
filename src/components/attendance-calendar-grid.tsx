@@ -99,23 +99,24 @@ export function AttendanceCalendarGrid({
         className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground"
         aria-label="Capacity legend"
       >
-        <span className="flex items-center gap-2">
+        <span>Capacity is</span>
+        <span className="flex items-center gap-1">
           <span aria-hidden="true" className="size-2 rounded-full bg-red-600" />
-          Under 50%
+          below 50%
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1">
           <span
             aria-hidden="true"
             className="size-2 rounded-full bg-orange-500"
           />
-          50-75%
+          between 50 and75%
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1">
           <span
             aria-hidden="true"
             className="size-2 rounded-full bg-green-600"
           />
-          Over 75%
+          more than 75%
         </span>
       </div>
     </AttendanceContext.Provider>
