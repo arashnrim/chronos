@@ -1,4 +1,4 @@
-import { Spinner } from "@components/ui/spinner";
+import { Spinner } from "@root/src/components/ui/Spinner";
 import { IconUserCheck, IconUserX } from "@tabler/icons-react";
 import type { PersonIn, PersonOut } from "@utils/attendance";
 import { capacityLevelColors, getCapacityLevel } from "@utils/attendance";

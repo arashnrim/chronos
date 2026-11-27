@@ -1,6 +1,7 @@
 ---
-import AttendanceCalendar from "@components/attendance-calendar";
-import ThemeToggle from "@components/theme-toggle.astro";
+import AttendanceCalendar from "@root/src/components/AttendanceCalendar";
+import AuthenticationError from "@components/AuthenticationError.astro";
+import ThemeToggle from "@components/ThemeToggle.astro";
 import BaseLayout from "@layouts/BaseLayout.astro";
 ---
 
@@ -10,6 +11,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
       <h1 class="text-3xl font-bold tracking-normal">Chronos</h1>
       <ThemeToggle />
     </div>
+    <AuthenticationError />
     <AttendanceCalendar client:only="react" />
   </main>
 </BaseLayout>

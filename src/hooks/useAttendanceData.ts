@@ -1,6 +1,6 @@
 import type { Person } from "@utils/attendance";
 import type { NormalizedCalendarEvent } from "@utils/normalize-events";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type CalendarData = {
   people: Person[];
@@ -8,7 +8,7 @@ export type CalendarData = {
 };
 type LoadState =
   | { status: "loading" }
-  | { status: "unauthorized" }
+  | { status: "unauthorized"; attempt: number }
   | { status: "error" }
   | { status: "ready"; data: CalendarData };
 
@@ -18,7 +18,7 @@ function monthParameter(date: Date, offset: number) {
 }
 
 export function useAttendanceData(month: Date) {
-  const [attempt, setAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(1);
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const monthKey = monthParameter(month, 0);
 
@@ -38,11 +38,15 @@ export function useAttendanceData(month: Date) {
           fetch(url, {
             credentials: "same-origin",
             signal: controller.signal,
+            headers:
+              attempt === 1
+                ? { "X-Chronos-Suppress-Auth-Challenge": "true" }
+                : undefined,
           }),
         ),
       );
       if (responses.some((response) => response.status === 401)) {
-        setState({ status: "unauthorized" });
+        setState({ status: "unauthorized", attempt });
         return;
       }
       if (responses.some((response) => !response.ok))
@@ -67,7 +71,7 @@ export function useAttendanceData(month: Date) {
     return () => controller.abort();
   }, [monthKey, attempt]);
 
-  const retry = () => setAttempt((value) => value + 1);
+  const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   return { state, retry };
 }

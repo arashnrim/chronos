@@ -1,12 +1,12 @@
-import { createContext, useContext } from "react";
-import type { DayButton } from "react-day-picker";
-import { Calendar, CalendarDayButton } from "@root/src/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@root/src/components/ui/Calendar";
 import {
+  capacityLevelColors,
   getAttendance,
   getCapacityLevel,
-  capacityLevelColors,
 } from "@utils/attendance";
-import type { CalendarData } from "./use-attendance-data";
+import { createContext, useContext } from "react";
+import type { DayButton } from "react-day-picker";
+import type { CalendarData } from "../hooks/useAttendanceData";
 
 const AttendanceContext = createContext<{
   data: CalendarData | null;

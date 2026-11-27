@@ -29,3 +29,4 @@ credentials.json
 
 # configuration files
 chronos-config.json
+.env*

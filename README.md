@@ -83,6 +83,7 @@ To run this project, you'll need any Node.js package manager with a Node.js runt
    - `GOOGLE_CREDENTIALS_JSON` is a one-line, compact string of the `credentials.json` file. Wrap the string with single quotation marks (i.e. `'{"type":...}'`)
    - `CHRONOS_CONFIG_JSON` is a one-line, compact string of the `chronos-config.json` file. Wrap the string with single quotation marks (i.e. `'{"people":...}'`)
    - Tip: to get a one-line, compact string, you can use VS Code and select "Join lines" from the Command Palette.
+   - When adding these values in Vercel's Environment Variables settings, enter only the JSON itself, without the surrounding single quotation marks or the `VARIABLE_NAME=` prefix. The quotation marks above are for `.env` file syntax; if included in Vercel's value, they are treated as part of the string and make it invalid JSON.
 
 ### Deployment
 

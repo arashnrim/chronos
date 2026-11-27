@@ -10,11 +10,14 @@ export const onRequest = defineMiddleware((context, next) => {
     );
 
     if (!authorized) {
+      const suppressChallenge =
+        context.request.headers.get("X-Chronos-Suppress-Auth-Challenge") ===
+        "true";
       return new Response(null, {
         status: 401,
-        headers: {
-          "WWW-Authenticate": 'Basic charset="UTF-8"',
-        },
+        headers: suppressChallenge
+          ? {}
+          : { "WWW-Authenticate": 'Basic charset="UTF-8"' },
       });
     }
   }

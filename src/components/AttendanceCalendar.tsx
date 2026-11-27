@@ -1,18 +1,37 @@
-import { AttendanceCalendarGrid } from "@components/attendance-calendar-grid";
-import { PeopleList, PeopleListLoading } from "@components/people-list";
-import { Button } from "@components/ui/button";
-import { useAttendanceData } from "@components/use-attendance-data";
+import { AttendanceCalendarGrid } from "@root/src/components/AttendanceCalendarGrid";
+import { PeopleList, PeopleListLoading } from "@root/src/components/PeopleList";
+import { Button } from "@root/src/components/ui/Button";
+import { useAttendanceData } from "@root/src/hooks/useAttendanceData";
 import {
   getAttendance,
   getCapacityLevel,
   nextWeekday,
 } from "@utils/attendance";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AttendanceCalendar() {
   const [selected, setSelected] = useState(() => nextWeekday(new Date()));
   const [month, setMonth] = useState(() => new Date(selected));
   const { state, retry } = useAttendanceData(month);
+
+  useEffect(() => {
+    if (state.status === "unauthorized") {
+      window.dispatchEvent(
+        new CustomEvent("chronos:auth-required", {
+          detail: { attempt: state.attempt },
+        }),
+      );
+    } else if (state.status === "ready") {
+      window.dispatchEvent(new Event("chronos:auth-restored"));
+    }
+  }, [state]);
+
+  useEffect(() => {
+    const handleAuthRetry = () => retry();
+    window.addEventListener("chronos:auth-retry", handleAuthRetry);
+    return () =>
+      window.removeEventListener("chronos:auth-retry", handleAuthRetry);
+  }, [retry]);
 
   const data = state.status === "ready" ? state.data : null;
   const attendance = data
@@ -50,27 +69,19 @@ export default function AttendanceCalendar() {
             year: "numeric",
           })}
         </h2>
-        {state.status === "loading" && (
+        {(state.status === "loading" || state.status === "unauthorized") && (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <PeopleListLoading variant="in" />
             <PeopleListLoading variant="out" />
           </div>
         )}
-        {(state.status === "error" || state.status === "unauthorized") && (
+        {state.status === "error" && (
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <p
-              className={
-                state.status === "error"
-                  ? "text-sm text-destructive"
-                  : "text-sm text-muted-foreground"
-              }
-            >
-              {state.status === "error"
-                ? "Could not load attendance."
-                : "Halt! Who goes there? Enter your name and the password to continue."}
+            <p className="text-sm text-destructive">
+              Cannot load attendance, die liao
             </p>
             <Button variant="outline" size="sm" onClick={retry}>
-              {state.status === "unauthorized" ? "Enter password" : "Retry"}
+              Retry
             </Button>
           </div>
         )}
@@ -78,7 +89,7 @@ export default function AttendanceCalendar() {
           <>
             {data.people.length === 0 && (
               <p className="mt-3 text-sm text-muted-foreground">
-                No people configured.
+                No one's configured yet
               </p>
             )}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
