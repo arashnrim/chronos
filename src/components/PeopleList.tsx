@@ -57,7 +57,7 @@ export function PeopleList({
 }: {
   variant: ListVariant;
   people: (PersonIn | PersonOut)[];
-  capacityLevel: ReturnType<typeof getCapacityLevel>;
+  capacityLevel?: ReturnType<typeof getCapacityLevel>;
 }) {
   return (
     <PeopleListShell
@@ -67,9 +67,7 @@ export function PeopleList({
           <span
             className={[
               "font-semibold",
-              variant === "in" && capacityLevel
-                ? capacityLevelColors[capacityLevel]
-                : "",
+              capacityLevel ? capacityLevelColors[capacityLevel] : "",
             ].join(" ")}
           >
             {people.length}

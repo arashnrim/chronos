@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("astro:env/server", () => ({ API_SECRET: "secret" }));
 
-import { isAuthorized } from "./basic-auth";
+import { isAuthorized } from "@utils/basic-auth";
 
 const people = [{ name: "Alex Smith", color: "#26734D" }];
 

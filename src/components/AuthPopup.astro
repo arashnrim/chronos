@@ -1,29 +1,30 @@
 ---
 import { IconHandStop } from "@tabler/icons-react";
+import { Button } from "@components/ui/Button";
 ---
 
 <section
-  data-auth-error
+  id="auth-error-container"
   class="fixed inset-0 z-50 hidden min-h-dvh place-items-center bg-black/35 px-6 py-12 backdrop-blur-sm"
   role="alert"
 >
   <div class="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center text-card-foreground shadow-2xl sm:p-10">
     <IconHandStop className="mx-auto mt-4 h-16 w-16 text-destructive mb-4" />
-    <h1 id="auth-error-title" class="text-3xl font-bold tracking-tight">
+    <h1 id="auth-error-title" class="text-3xl font-bold">
       Halt! Who goes there?
     </h1>
-    <p data-auth-description class="mt-4 text-muted-foreground">
+    <p id="auth-error-description" class="mt-4 text-muted-foreground">
       Just enter your name and the password to continue. The capitalisation
       doesn't matter, just spell properly can already.
     </p>
-    <button
-      data-auth-button
-      class="mt-6 inline-flex h-9 items-center justify-center rounded-4xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      type="button"
-    >
+    <Button id="auth-error-button" className="mt-6">
       Let me in leh
-    </button>
-    <p data-retry-hint hidden class="mt-4 text-xs text-muted-foreground">
+    </Button>
+    <p
+      id="auth-error-retry-hint"
+      hidden
+      class="mt-4 text-xs text-muted-foreground"
+    >
       Nothing happening after clicking the button? Try closing your browser and
       loading the page again.
     </p>
@@ -31,21 +32,22 @@ import { IconHandStop } from "@tabler/icons-react";
 </section>
 
 <script>
-  const errorScreen = document.querySelector<HTMLElement>("[data-auth-error]");
-  const errorDescription = errorScreen?.querySelector<HTMLElement>(
-    "[data-auth-description]",
+  const errorContainer = document.querySelector<HTMLElement>(
+    "#auth-error-container",
   );
-  const errorButton =
-    errorScreen?.querySelector<HTMLElement>("[data-auth-button]");
+  const errorDescription = document.querySelector<HTMLElement>(
+    "#auth-error-description",
+  );
+  const errorButton = document.querySelector<HTMLElement>("#auth-error-button");
+  const retryHint = document.querySelector<HTMLElement>(
+    "#auth-error-retry-hint",
+  );
 
-  if (errorScreen) {
-    const retryHint =
-      errorScreen.querySelector<HTMLElement>("[data-retry-hint]");
-
+  if (errorContainer) {
     window.addEventListener("chronos:auth-required", (event) => {
       const { attempt } = (event as CustomEvent<{ attempt: number }>).detail;
-      errorScreen.classList.remove("hidden");
-      errorScreen.classList.add("grid");
+      errorContainer.classList.remove("hidden");
+      errorContainer.classList.add("grid");
       if (retryHint) retryHint.hidden = attempt === 1;
 
       if (attempt > 1) {
@@ -57,8 +59,8 @@ import { IconHandStop } from "@tabler/icons-react";
     });
 
     window.addEventListener("chronos:auth-restored", () => {
-      errorScreen.classList.add("hidden");
-      errorScreen.classList.remove("grid");
+      errorContainer.classList.add("hidden");
+      errorContainer.classList.remove("grid");
     });
 
     if (errorButton) {

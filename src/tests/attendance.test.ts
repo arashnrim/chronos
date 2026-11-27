@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getAttendance, getCapacityLevel, nextWeekday } from "./attendance";
-import type { NormalizedCalendarEvent } from "./normalize-events";
+import {
+  getAttendance,
+  getCapacityLevel,
+  nextWeekday,
+} from "@utils/attendance";
+import type { NormalizedCalendarEvent } from "@utils/normalize-events";
 
 const people = [
   { name: "Alex", color: "#123456" },

@@ -1,112 +1,129 @@
-import { AttendanceCalendarGrid } from "@root/src/components/AttendanceCalendarGrid";
-import { PeopleList, PeopleListLoading } from "@root/src/components/PeopleList";
-import { Button } from "@root/src/components/ui/Button";
-import { useAttendanceData } from "@root/src/hooks/useAttendanceData";
+import { Calendar, CalendarDayButton } from "@root/src/components/ui/Calendar";
 import {
+  capacityLevelColors,
   getAttendance,
   getCapacityLevel,
-  nextWeekday,
 } from "@utils/attendance";
-import { useEffect, useState } from "react";
+import { createContext, useContext } from "react";
+import type { DayButton } from "react-day-picker";
+import type { CalendarData } from "../hooks/useAttendanceData";
 
-export default function AttendanceCalendar() {
-  const [selected, setSelected] = useState(() => nextWeekday(new Date()));
-  const [month, setMonth] = useState(() => new Date(selected));
-  const { state, retry } = useAttendanceData(month);
+const AttendanceContext = createContext<{
+  data: CalendarData | null;
+  isLoading: boolean;
+}>({ data: null, isLoading: false });
 
-  useEffect(() => {
-    if (state.status === "unauthorized") {
-      window.dispatchEvent(
-        new CustomEvent("chronos:auth-required", {
-          detail: { attempt: state.attempt },
-        }),
-      );
-    } else if (state.status === "ready") {
-      window.dispatchEvent(new Event("chronos:auth-restored"));
-    }
-  }, [state]);
-
-  useEffect(() => {
-    const handleAuthRetry = () => retry();
-    window.addEventListener("chronos:auth-retry", handleAuthRetry);
-    return () =>
-      window.removeEventListener("chronos:auth-retry", handleAuthRetry);
-  }, [retry]);
-
-  const data = state.status === "ready" ? state.data : null;
-  const attendance = data
-    ? getAttendance(selected, data.people, data.events)
-    : null;
-  const capacityLevel =
-    attendance && data
-      ? getCapacityLevel(attendance.peopleIn.length, data.people.length)
-      : null;
+const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
+  const { data, isLoading } = useContext(AttendanceContext);
+  const attendance =
+    data && getAttendance(props.day.date, data.people, data.events);
+  const level =
+    attendance &&
+    data &&
+    getCapacityLevel(attendance.peopleIn.length, data.people.length);
+  const label = props["aria-label"];
 
   return (
-    <>
-      <AttendanceCalendarGrid
-        data={data}
-        isLoading={state.status === "loading"}
+    <CalendarDayButton
+      {...props}
+      className="mx-auto w-full max-w-12 sm:max-w-18"
+      aria-label={
+        level && data && attendance
+          ? `${label}, ${attendance.peopleIn.length} of ${data.people.length} people in`
+          : label
+      }
+    >
+      <span className="!text-xl font-semibold !opacity-100">
+        {props.children}
+      </span>
+      {level && attendance && (
+        <span
+          aria-hidden="true"
+          className={`!text-xs font-light leading-none !opacity-100 ${
+            props.modifiers.selected
+              ? "text-primary-muted"
+              : capacityLevelColors[level]
+          }`}
+        >
+          {attendance.peopleIn.length}
+        </span>
+      )}
+      {!level && isLoading && (
+        <span
+          aria-hidden="true"
+          className="h-2 w-4 animate-pulse rounded-sm bg-muted"
+        />
+      )}
+    </CalendarDayButton>
+  );
+};
+
+export const AttendanceCalendar = ({
+  data,
+  isLoading,
+  selected,
+  month,
+  onSelect,
+  onMonthChange,
+}: {
+  data: CalendarData | null;
+  isLoading: boolean;
+  selected: Date;
+  month: Date;
+  onSelect: (date: Date) => void;
+  onMonthChange: (date: Date) => void;
+}) => {
+  return (
+    <AttendanceContext.Provider value={{ data, isLoading }}>
+      <Calendar
+        mode="single"
+        required
         selected={selected}
-        onSelect={setSelected}
+        onSelect={onSelect}
         month={month}
-        onMonthChange={(nextMonth) => {
-          setMonth(nextMonth);
-          setSelected(
-            nextWeekday(
-              new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1),
-            ),
-          );
+        onMonthChange={onMonthChange}
+        startMonth={new Date()}
+        fixedWeeks
+        showOutsideDays={false}
+        weekStartsOn={1}
+        hidden={{ dayOfWeek: [0, 6] }}
+        modifiers={{ weekend: { dayOfWeek: [0, 6] } }}
+        modifiersClassNames={{ weekend: "hidden" }}
+        components={{ DayButton: AttendanceDayButton }}
+        className="max-h-[640px] rounded-lg border p-4 sm:p-6"
+        classNames={{
+          root: "w-full",
+          months: "relative flex w-full flex-col",
+          weekdays: "flex [&>th:nth-last-child(-n+2)]:hidden",
+          week: "mt-2 flex h-12 w-full sm:h-18 [&:not(:has(td:not([data-hidden=true])))]:hidden",
+          day: "group/day relative h-full w-full p-0 text-center select-none",
+          today: "bg-none",
         }}
       />
-
-      <div className="mt-8" aria-live="polite">
-        <h2 className="text-xl font-bold">
-          {selected.toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </h2>
-        {(state.status === "loading" || state.status === "unauthorized") && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <PeopleListLoading variant="in" />
-            <PeopleListLoading variant="out" />
-          </div>
-        )}
-        {state.status === "error" && (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <p className="text-sm text-destructive">
-              Cannot load attendance, die liao
-            </p>
-            <Button variant="outline" size="sm" onClick={retry}>
-              Retry
-            </Button>
-          </div>
-        )}
-        {attendance && data && (
-          <>
-            {data.people.length === 0 && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                No one's configured yet
-              </p>
-            )}
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <PeopleList
-                variant="in"
-                people={attendance.peopleIn}
-                capacityLevel={capacityLevel}
-              />
-              <PeopleList
-                variant="out"
-                people={attendance.peopleOut}
-                capacityLevel={capacityLevel}
-              />
-            </div>
-          </>
-        )}
+      <div
+        className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground"
+        aria-label="Capacity legend"
+      >
+        <span>Capacity is</span>
+        <span className="flex items-center gap-1">
+          <span aria-hidden="true" className="size-2 rounded-full bg-red-600" />
+          below 50%
+        </span>
+        <span className="flex items-center gap-1">
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full bg-orange-500"
+          />
+          between 50 and 75%
+        </span>
+        <span className="flex items-center gap-1">
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full bg-green-600"
+          />
+          more than 75%
+        </span>
       </div>
-    </>
+    </AttendanceContext.Provider>
   );
-}
+};

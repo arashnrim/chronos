@@ -24,6 +24,9 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
   integrations: [react()],
 });

@@ -1,17 +1,17 @@
 ---
-import AttendanceCalendar from "@root/src/components/AttendanceCalendar";
-import AuthenticationError from "@components/AuthenticationError.astro";
+import AuthPopup from "@components/AuthPopup.astro";
 import ThemeToggle from "@components/ThemeToggle.astro";
 import BaseLayout from "@layouts/BaseLayout.astro";
+import AttendanceView from "@root/src/components/AttendanceView";
 ---
 
 <BaseLayout>
   <main class="mx-auto w-full max-w-[960px] px-4 py-10 sm:px-6 sm:py-16">
     <div class="mb-6 flex items-center justify-between gap-4">
-      <h1 class="text-3xl font-bold tracking-normal">Chronos</h1>
+      <h1 class="text-3xl font-bold">Chronos</h1>
       <ThemeToggle />
     </div>
-    <AuthenticationError />
-    <AttendanceCalendar client:only="react" />
+    <AuthPopup />
+    <AttendanceView client:only="react" />
   </main>
 </BaseLayout>

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("astro:env/server", () => ({ CHRONOS_CONFIG_JSON: "{}" }));
 
-import { parseChronosConfig } from "./calendar-config";
-import { normalizeCalendarEvent } from "./normalize-events";
+import { parseChronosConfig } from "@utils/calendar-config";
+import { normalizeCalendarEvent } from "@utils/normalize-events";
 
 const config = {
   people: [
