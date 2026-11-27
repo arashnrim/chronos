@@ -1,7 +1,6 @@
 import { Spinner } from "@root/src/components/ui/Spinner";
 import { IconUserCheck, IconUserX } from "@tabler/icons-react";
 import type { PersonIn, PersonOut } from "@utils/attendance";
-import { capacityLevelColors, getCapacityLevel } from "@utils/attendance";
 import type { ReactNode } from "react";
 
 type ListVariant = "in" | "out";
@@ -19,7 +18,7 @@ function PeopleListShell({
 }: {
   variant: ListVariant;
   loading?: boolean;
-  headerContent: ReactNode;
+  headerContent?: ReactNode;
   children: ReactNode;
 }) {
   const title = titles[variant];
@@ -53,32 +52,12 @@ function PeopleListShell({
 export function PeopleList({
   variant,
   people,
-  capacityLevel,
 }: {
   variant: ListVariant;
   people: (PersonIn | PersonOut)[];
-  capacityLevel?: ReturnType<typeof getCapacityLevel>;
 }) {
   return (
-    <PeopleListShell
-      variant={variant}
-      headerContent={
-        <span className="text-sm">
-          <span
-            className={[
-              "font-semibold",
-              capacityLevel ? capacityLevelColors[capacityLevel] : "",
-            ].join(" ")}
-          >
-            {people.length}
-          </span>
-          <span className="text-muted-foreground">
-            {" "}
-            {people.length === 1 ? "person" : "people"}
-          </span>
-        </span>
-      }
-    >
+    <PeopleListShell variant={variant}>
       {people.length === 0 ? (
         <p className="py-5 text-center text-muted-foreground z-10">
           {variant === "in" ? "Weird leh, no one's in" : "Everyone in liao"}
@@ -105,8 +84,15 @@ export function PeopleList({
               </span>
               <div className="min-w-0">
                 <p className="break-words font-semibold">{person.name}</p>
-                {"reasons" in person && (
+                {variant === "in" && "presentPeriod" in person && (
                   <p className="break-words text-xs text-muted-foreground">
+                    In {person.presentPeriod}
+                  </p>
+                )}
+                {variant === "out" && "reasons" in person && (
+                  <p className="break-words text-xs text-muted-foreground">
+                    {"absencePeriod" in person &&
+                      `Out ${person.absencePeriod} · `}
                     {person.reasons.join(", ")}
                   </p>
                 )}
@@ -123,16 +109,7 @@ export function PeopleListLoading({ variant }: { variant: ListVariant }) {
   const title = titles[variant];
 
   return (
-    <PeopleListShell
-      variant={variant}
-      loading
-      headerContent={
-        <span
-          aria-hidden="true"
-          className="h-4 w-8 animate-pulse rounded bg-muted"
-        />
-      }
-    >
+    <PeopleListShell variant={variant} loading>
       <div className="flex min-h-24 items-center justify-center">
         <Spinner aria-label={`Loading ${title.toLowerCase()}`} />
       </div>

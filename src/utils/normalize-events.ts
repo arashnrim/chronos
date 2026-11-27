@@ -22,6 +22,7 @@ type PersonLabel = Pick<ChronosConfig["people"][number], "name" | "color">;
 export type NormalizedCalendarEvent = {
   startDate: string | null;
   endDate: string | null;
+  absencePeriod?: "AM" | "PM";
   subject: string | null;
   people: PersonLabel[];
   type: EventTypeLabel | null;
@@ -75,6 +76,7 @@ export const normalizeCalendarEvent = (
   }
 
   const typeCode = match[1].toUpperCase();
+  const period = match[2]?.toUpperCase();
   const configuredType = config.eventTypes.find(
     (eventType) => eventType.code === typeCode,
   );
@@ -82,6 +84,7 @@ export const normalizeCalendarEvent = (
   return {
     startDate: event.start?.date ?? event.start?.dateTime ?? null,
     endDate: event.end?.date ?? event.end?.dateTime ?? null,
+    ...(period === "AM" || period === "PM" ? { absencePeriod: period } : {}),
     subject,
     people,
     type: {

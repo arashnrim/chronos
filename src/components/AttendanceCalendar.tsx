@@ -1,3 +1,4 @@
+import type { CalendarData } from "@hooks/useAttendanceData";
 import { Calendar, CalendarDayButton } from "@root/src/components/ui/Calendar";
 import {
   capacityLevelColors,
@@ -6,7 +7,6 @@ import {
 } from "@utils/attendance";
 import { createContext, useContext } from "react";
 import type { DayButton } from "react-day-picker";
-import type { CalendarData } from "@hooks/useAttendanceData";
 
 const AttendanceContext = createContext<{
   data: CalendarData | null;
@@ -17,38 +17,54 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
   const { data, isLoading } = useContext(AttendanceContext);
   const attendance =
     data && getAttendance(props.day.date, data.people, data.events);
-  const capacityLevel =
-    attendance &&
-    data &&
-    getCapacityLevel(attendance.peopleIn.length, data.people.length);
+  const capacityLevels = attendance &&
+    data && {
+      AM: getCapacityLevel(
+        attendance.periods.AM.peopleIn.length,
+        data.people.length,
+      ),
+      PM: getCapacityLevel(
+        attendance.periods.PM.peopleIn.length,
+        data.people.length,
+      ),
+    };
   const label = props["aria-label"];
 
   return (
     <CalendarDayButton
       {...props}
-      className="mx-auto w-full max-w-12 sm:max-w-18"
+      className="mx-auto w-full max-w-12 !gap-0 sm:max-w-18"
       aria-label={
-        capacityLevel && data && attendance
-          ? `${label}, ${attendance.peopleIn.length} of ${data.people.length} people in`
+        capacityLevels && data && attendance && data.people.length > 0
+          ? `${label}, AM: ${attendance.periods.AM.peopleIn.length} of ${data.people.length} people in, PM: ${attendance.periods.PM.peopleIn.length} of ${data.people.length} people in`
           : label
       }
     >
       <span className="!text-xl font-semibold !opacity-100">
         {props.children}
       </span>
-      {capacityLevel && attendance && (
+      {capacityLevels && attendance && data && data.people.length > 0 && (
         <span
           aria-hidden="true"
-          className={`!text-xs font-light leading-none !opacity-100 ${
-            props.modifiers.selected
-              ? "text-primary-muted"
-              : capacityLevelColors[capacityLevel]
-          }`}
+          className="flex flex-col !text-[9px] leading-[10px] !opacity-100"
         >
-          {attendance.peopleIn.length}
+          {(["AM", "PM"] as const).map((period) => (
+            <span
+              key={period}
+              className={
+                props.modifiers.selected
+                  ? "text-primary-muted"
+                  : capacityLevels[period]
+                    ? capacityLevelColors[capacityLevels[period]]
+                    : "text-muted-foreground"
+              }
+            >
+              {period} {attendance.periods[period].peopleIn.length}
+            </span>
+          ))}
         </span>
       )}
-      {!capacityLevel && isLoading && (
+      {!capacityLevels && isLoading && (
         <span
           aria-hidden="true"
           className="h-2 w-4 animate-pulse rounded-sm bg-muted"

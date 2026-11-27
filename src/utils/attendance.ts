@@ -1,9 +1,20 @@
 import type { NormalizedCalendarEvent } from "@utils/normalize-events";
 
 export type Person = { name: string; color: string };
-export type PersonIn = Person;
-export type PersonOut = Person & { reasons: string[] };
-export type Attendance = { peopleIn: PersonIn[]; peopleOut: PersonOut[] };
+export type PersonPartial = Person & {
+  absencePeriod: "AM" | "PM";
+  presentPeriod: "AM" | "PM";
+  reasons: string[];
+};
+export type PersonIn = Person | PersonPartial;
+export type PersonOut = (Person & { reasons: string[] }) | PersonPartial;
+export type PeriodAttendance = {
+  peopleIn: PersonIn[];
+  peopleOut: PersonOut[];
+};
+export type Attendance = PeriodAttendance & {
+  periods: { AM: PeriodAttendance; PM: PeriodAttendance };
+};
 
 export const nextWeekday = (date: Date): Date => {
   const weekday = new Date(date);
@@ -38,7 +49,13 @@ export const getAttendance = (
     date.getMonth(),
     date.getDate() + 1,
   );
-  const reasonsByName = new Map<string, { reason: string; priority: number }>();
+  const reasonsByPeriod: Record<
+    "AM" | "PM",
+    Map<string, { reason: string; priority: number }>
+  > = {
+    AM: new Map(),
+    PM: new Map(),
+  };
 
   for (const event of events) {
     if (!event.startDate || !event.endDate) continue;
@@ -46,18 +63,58 @@ export const getAttendance = (
     const end = dateValue(event.endDate);
     if (!(start < endOfDay && end > startOfDay)) continue;
 
-    for (const person of event.people) {
-      const priority = event.type?.priority ?? 0;
-      const existing = reasonsByName.get(person.name);
-      if (!existing || priority > existing.priority) {
-        reasonsByName.set(person.name, {
-          reason: event.type?.label ?? "Reason unavailable",
-          priority,
-        });
+    const affectedPeriods = event.absencePeriod
+      ? [event.absencePeriod]
+      : (["AM", "PM"] as const);
+    for (const period of affectedPeriods) {
+      for (const person of event.people) {
+        const priority = event.type?.priority ?? 0;
+        const existing = reasonsByPeriod[period].get(person.name);
+        if (!existing || priority > existing.priority) {
+          reasonsByPeriod[period].set(person.name, {
+            reason: event.type?.label ?? "Reason unavailable",
+            priority,
+          });
+        }
       }
     }
   }
 
+  const periods = {
+    AM: getPeriodAttendance(people, reasonsByPeriod.AM),
+    PM: getPeriodAttendance(people, reasonsByPeriod.PM),
+  };
+  const peopleIn: PersonIn[] = [];
+  const peopleOut: PersonOut[] = [];
+  for (const person of people) {
+    const morningReason = reasonsByPeriod.AM.get(person.name);
+    const afternoonReason = reasonsByPeriod.PM.get(person.name);
+    if (morningReason && afternoonReason) {
+      peopleOut.push({
+        ...person,
+        reasons: [...new Set([morningReason.reason, afternoonReason.reason])],
+      });
+    } else if (morningReason || afternoonReason) {
+      const absencePeriod = morningReason ? "AM" : "PM";
+      const partialPerson: PersonPartial = {
+        ...person,
+        absencePeriod,
+        presentPeriod: morningReason ? "PM" : "AM",
+        reasons: [(morningReason ?? afternoonReason)!.reason],
+      };
+      peopleIn.push(partialPerson);
+      peopleOut.push(partialPerson);
+    } else {
+      peopleIn.push(person);
+    }
+  }
+  return { peopleIn, peopleOut, periods };
+};
+
+const getPeriodAttendance = (
+  people: readonly Person[],
+  reasonsByName: ReadonlyMap<string, { reason: string; priority: number }>,
+): PeriodAttendance => {
   const peopleIn: PersonIn[] = [];
   const peopleOut: PersonOut[] = [];
   for (const person of people) {

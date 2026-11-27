@@ -37,7 +37,9 @@ describe("next weekday", () => {
 
 describe("daily attendance", () => {
   it("counts multi-day absences until the exclusive end date", () => {
-    expect(getAttendance(new Date(2026, 10, 27), people, [event()])).toEqual({
+    expect(
+      getAttendance(new Date(2026, 10, 27), people, [event()]),
+    ).toMatchObject({
       peopleIn: [people[1]],
       peopleOut: [{ ...people[0], reasons: ["Annual Leave"] }],
     });
@@ -82,6 +84,80 @@ describe("daily attendance", () => {
     expect(
       getAttendance(new Date(2026, 10, 26), people, [timed]).peopleOut,
     ).toEqual([]);
+  });
+
+  it("marks an AM absence as partial and keeps the person in for PM", () => {
+    const attendance = getAttendance(new Date(2026, 10, 27), people, [
+      event({ absencePeriod: "AM" }),
+    ]);
+    const partialPerson = {
+      ...people[0],
+      absencePeriod: "AM",
+      presentPeriod: "PM",
+      reasons: ["Annual Leave"],
+    };
+    expect(attendance.peopleIn).toContainEqual(partialPerson);
+    expect(attendance.peopleOut).toContainEqual(partialPerson);
+    expect(attendance.peopleIn).toHaveLength(2);
+    expect(attendance.peopleOut).toHaveLength(1);
+    expect(attendance.periods.AM.peopleOut).toEqual([
+      { ...people[0], reasons: ["Annual Leave"] },
+    ]);
+    expect(attendance.periods.PM.peopleIn).toContainEqual(people[0]);
+  });
+
+  it("marks a PM absence as partial and keeps the person in for AM", () => {
+    const attendance = getAttendance(new Date(2026, 10, 27), people, [
+      event({ absencePeriod: "PM" }),
+    ]);
+    const partialPerson = {
+      ...people[0],
+      absencePeriod: "PM",
+      presentPeriod: "AM",
+      reasons: ["Annual Leave"],
+    };
+    expect(attendance.peopleIn).toContainEqual(partialPerson);
+    expect(attendance.peopleOut).toContainEqual(partialPerson);
+    expect(attendance.peopleIn).toHaveLength(2);
+    expect(attendance.peopleOut).toHaveLength(1);
+    expect(attendance.periods.AM.peopleIn).toContainEqual(people[0]);
+    expect(attendance.periods.PM.peopleOut).toEqual([
+      { ...people[0], reasons: ["Annual Leave"] },
+    ]);
+  });
+
+  it("resolves overlapping reasons independently for each period", () => {
+    const attendance = getAttendance(new Date(2026, 10, 27), people, [
+      event({ absencePeriod: "AM" }),
+      event({
+        absencePeriod: "AM",
+        type: { code: "GD", label: "Guard Duty", priority: 10 },
+      }),
+      event({
+        absencePeriod: "PM",
+        type: { code: "OFF", label: "Off", priority: 5 },
+      }),
+    ]);
+    expect(attendance.peopleOut).toEqual([
+      { ...people[0], reasons: ["Guard Duty", "Off"] },
+    ]);
+    expect(attendance.periods.AM.peopleOut).toEqual([
+      { ...people[0], reasons: ["Guard Duty"] },
+    ]);
+    expect(attendance.periods.PM.peopleOut).toEqual([
+      { ...people[0], reasons: ["Off"] },
+    ]);
+  });
+
+  it("treats absences in both periods as a full-day absence", () => {
+    const attendance = getAttendance(new Date(2026, 10, 27), people, [
+      event({ absencePeriod: "AM" }),
+      event({ absencePeriod: "PM" }),
+    ]);
+    expect(attendance.peopleOut).toEqual([
+      { ...people[0], reasons: ["Annual Leave"] },
+    ]);
+    expect(attendance.peopleIn).toEqual([people[1]]);
   });
 });
 

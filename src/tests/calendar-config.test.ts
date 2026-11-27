@@ -123,6 +123,15 @@ describe("normalizeCalendarEvent", () => {
     });
   });
 
+  it("preserves the half-day period from the title suffix", () => {
+    expect(
+      normalizeCalendarEvent({ summary: "(OFF-PM) Person A" }, parsedConfig),
+    ).toMatchObject({ absencePeriod: "PM" });
+    expect(
+      normalizeCalendarEvent({ summary: "(OFF-AM) Person A" }, parsedConfig),
+    ).toMatchObject({ absencePeriod: "AM" });
+  });
+
   it("keeps unmatched text as a subject and unknown type code", () => {
     expect(
       normalizeCalendarEvent({ summary: "(OTHER) Holiday" }, parsedConfig),
