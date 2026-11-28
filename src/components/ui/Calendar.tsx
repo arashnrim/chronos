@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cn } from "cn";
+import * as React from "react";
 import {
   DayPicker,
   getDefaultClassNames,
@@ -7,11 +7,11 @@ import {
   type Locale,
 } from "react-day-picker";
 
-import { Button, buttonVariants } from "@root/src/components/ui/Button";
+import { Button, buttonVariants } from "@components/ui/Button";
 import {
+  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronDown,
 } from "@tabler/icons-react";
 
 const Calendar = ({

@@ -1,5 +1,5 @@
+import { Calendar, CalendarDayButton } from "@components/ui/Calendar";
 import AttendanceContext from "@contexts/AttendanceContext";
-import { Calendar, CalendarDayButton } from "@root/src/components/ui/Calendar";
 import {
   capacityLevelColors,
   getAttendance,

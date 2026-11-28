@@ -1,8 +1,8 @@
+import { AttendanceCalendar } from "@components/AttendanceCalendar";
 import { AuthPopup } from "@components/AuthPopup";
+import { SelectedDateBreakdown } from "@components/SelectedDateBreakdown";
 import AttendanceContext from "@contexts/AttendanceContext";
 import { useAttendanceData } from "@hooks/useAttendanceData";
-import { AttendanceCalendar } from "@root/src/components/AttendanceCalendar";
-import { SelectedDateBreakdown } from "@root/src/components/SelectedDateBreakdown";
 import { nextWeekday } from "@utils/attendance";
 import { useEffect, useState } from "react";
 
