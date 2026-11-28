@@ -1,8 +1,9 @@
 import { AuthPopup } from "@components/AuthPopup";
-import { SelectedDayBreakdown } from "@components/SelectedDayBreakdown";
+import AttendanceContext from "@contexts/AttendanceContext";
 import { useAttendanceData } from "@hooks/useAttendanceData";
 import { AttendanceCalendar } from "@root/src/components/AttendanceCalendar";
-import { getAttendance, nextWeekday } from "@utils/attendance";
+import { SelectedDateBreakdown } from "@root/src/components/SelectedDateBreakdown";
+import { nextWeekday } from "@utils/attendance";
 import { useEffect, useState } from "react";
 
 const AttendanceView = () => {
@@ -14,24 +15,19 @@ const AttendanceView = () => {
   useEffect(() => {
     if (state.status === "unauthorized") {
       setAuthAttempt(state.attempt);
-    } else if (state.status === "ready") {
+    } else {
       setAuthAttempt(null);
     }
   }, [state]);
 
-  const data = state.status === "ready" ? state.data : null;
-  const attendance = data
-    ? getAttendance(selected, data.people, data.events)
-    : null;
-
   return (
-    <>
+    <AttendanceContext.Provider
+      value={{ state, data: state.status === "ready" ? state.data : undefined }}
+    >
       {authAttempt !== null && (
         <AuthPopup attempt={authAttempt} onRetry={retry} />
       )}
       <AttendanceCalendar
-        data={data}
-        isLoading={state.status === "loading"}
         selected={selected}
         onSelect={setSelected}
         month={month}
@@ -45,14 +41,8 @@ const AttendanceView = () => {
         }}
       />
 
-      <SelectedDayBreakdown
-        selected={selected}
-        status={state.status === "unauthorized" ? "loading" : state.status}
-        attendance={attendance}
-        totalPeople={data?.people.length ?? 0}
-        onRetry={retry}
-      />
-    </>
+      <SelectedDateBreakdown selectedDate={selected} onRetry={retry} />
+    </AttendanceContext.Provider>
   );
 };
 

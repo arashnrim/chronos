@@ -1,17 +1,22 @@
 import { PeopleList, PeopleListLoading } from "@components/PeopleList";
+import { Badge } from "@components/ui/Badge";
 import { Button } from "@components/ui/Button";
-import type { Attendance } from "@utils/attendance";
-import { capacityLevelColors, getCapacityLevel } from "@utils/attendance";
-import { Badge } from "./ui/Badge";
-import { Skeleton } from "./ui/Skeleton";
+import { Skeleton } from "@components/ui/Skeleton";
+import AttendanceContext from "@contexts/AttendanceContext";
+import {
+  capacityLevelColors,
+  getAttendance,
+  getCapacityLevel,
+} from "@utils/attendance";
+import { useContext } from "react";
 
-const PeriodSummaries = ({
-  attendance,
-  totalPeople,
-}: {
-  attendance: Attendance | null;
-  totalPeople: number;
-}) => {
+const PeriodSummaries = ({ selectedDate }: { selectedDate: Date }) => {
+  const { data } = useContext(AttendanceContext);
+  const attendance = data
+    ? getAttendance(selectedDate, data.people, data.events)
+    : null;
+  const totalPeople = data?.people.length ?? 0;
+
   return (
     <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
       {(["AM", "PM"] as const).map((period) => {
@@ -47,39 +52,39 @@ const PeriodSummaries = ({
   );
 };
 
-export const SelectedDayBreakdown = ({
-  selected,
-  status,
-  attendance,
-  totalPeople,
+export const SelectedDateBreakdown = ({
+  selectedDate,
   onRetry,
 }: {
-  selected: Date;
-  status: "loading" | "error" | "ready";
-  attendance: Attendance | null;
-  totalPeople: number;
+  selectedDate: Date;
   onRetry: () => void;
 }) => {
+  const { state, data } = useContext(AttendanceContext);
+  const attendance = data
+    ? getAttendance(selectedDate, data.people, data.events)
+    : null;
+  const totalPeople = data?.people.length ?? 0;
+
   return (
     <div className="mt-8" aria-live="polite">
       <h2 className="text-xl font-bold">
-        {selected.toLocaleDateString(undefined, {
+        {selectedDate.toLocaleDateString(undefined, {
           weekday: "long",
           month: "long",
           day: "numeric",
           year: "numeric",
         })}
       </h2>
-      {status === "loading" && (
+      {(state.status === "loading" || state.status === "unauthorized") && (
         <>
-          <PeriodSummaries attendance={null} totalPeople={totalPeople} />
+          <PeriodSummaries selectedDate={selectedDate} />
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <PeopleListLoading variant="in" />
             <PeopleListLoading variant="out" />
           </div>
         </>
       )}
-      {status === "error" && (
+      {state.status === "error" && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <p className="text-sm text-destructive">
             Cannot load attendance, die liao
@@ -89,19 +94,14 @@ export const SelectedDayBreakdown = ({
           </Button>
         </div>
       )}
-      {status === "ready" && attendance && (
+      {state.status === "ready" && attendance && (
         <>
           {totalPeople === 0 && (
             <p className="mt-3 text-sm text-muted-foreground">
               No one's configured yet
             </p>
           )}
-          {totalPeople > 0 && (
-            <PeriodSummaries
-              attendance={attendance}
-              totalPeople={totalPeople}
-            />
-          )}
+          {totalPeople > 0 && <PeriodSummaries selectedDate={selectedDate} />}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <PeopleList variant="in" people={attendance.peopleIn} />
             <PeopleList variant="out" people={attendance.peopleOut} />

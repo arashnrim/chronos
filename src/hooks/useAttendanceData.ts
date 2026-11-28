@@ -6,19 +6,19 @@ export type CalendarData = {
   people: Person[];
   events: NormalizedCalendarEvent[];
 };
-type LoadState =
+export type LoadState =
   | { status: "loading" }
   | { status: "unauthorized"; attempt: number }
   | { status: "error" }
   | { status: "ready"; data: CalendarData };
 
-function monthParameter(date: Date, offset: number) {
+const monthParameter = (date: Date, offset: number) => {
   const month = new Date(date.getFullYear(), date.getMonth() + offset, 1);
   return `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
-}
+};
 
-export function useAttendanceData(month: Date) {
-  const [attempt, setAttempt] = useState(1);
+export const useAttendanceData = (month: Date) => {
+  const [authAttempt, setAuthAttempt] = useState(1);
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const monthKey = monthParameter(month, 0);
 
@@ -39,14 +39,14 @@ export function useAttendanceData(month: Date) {
             credentials: "same-origin",
             signal: controller.signal,
             headers:
-              attempt === 1
+              authAttempt === 1
                 ? { "X-Chronos-Suppress-Auth-Challenge": "true" }
                 : undefined,
           }),
         ),
       );
       if (responses.some((response) => response.status === 401)) {
-        setState({ status: "unauthorized", attempt });
+        setState({ status: "unauthorized", attempt: authAttempt });
         return;
       }
       if (responses.some((response) => !response.ok))
@@ -69,9 +69,9 @@ export function useAttendanceData(month: Date) {
       if (!controller.signal.aborted) setState({ status: "error" });
     });
     return () => controller.abort();
-  }, [monthKey, attempt]);
+  }, [monthKey, authAttempt]);
 
-  const retry = useCallback(() => setAttempt((value) => value + 1), []);
+  const retry = useCallback(() => setAuthAttempt((value) => value + 1), []);
 
   return { state, retry };
-}
+};

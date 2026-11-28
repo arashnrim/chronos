@@ -10,7 +10,7 @@ const titles: Record<ListVariant, string> = {
   out: "People out",
 };
 
-function PeopleListShell({
+const PeopleListShell = ({
   variant,
   loading = false,
   headerContent,
@@ -20,7 +20,7 @@ function PeopleListShell({
   loading?: boolean;
   headerContent?: ReactNode;
   children: ReactNode;
-}) {
+}) => {
   const title = titles[variant];
 
   return (
@@ -47,15 +47,15 @@ function PeopleListShell({
       {children}
     </section>
   );
-}
+};
 
-export function PeopleList({
+export const PeopleList = ({
   variant,
   people,
 }: {
   variant: ListVariant;
   people: (PersonIn | PersonOut)[];
-}) {
+}) => {
   return (
     <PeopleListShell variant={variant}>
       {people.length === 0 ? (
@@ -103,9 +103,9 @@ export function PeopleList({
       )}
     </PeopleListShell>
   );
-}
+};
 
-export function PeopleListLoading({ variant }: { variant: ListVariant }) {
+export const PeopleListLoading = ({ variant }: { variant: ListVariant }) => {
   const title = titles[variant];
 
   return (
@@ -115,4 +115,4 @@ export function PeopleListLoading({ variant }: { variant: ListVariant }) {
       </div>
     </PeopleListShell>
   );
-}
+};

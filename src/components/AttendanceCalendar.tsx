@@ -1,20 +1,16 @@
-import type { CalendarData } from "@hooks/useAttendanceData";
+import AttendanceContext from "@contexts/AttendanceContext";
 import { Calendar, CalendarDayButton } from "@root/src/components/ui/Calendar";
 import {
   capacityLevelColors,
   getAttendance,
   getCapacityLevel,
 } from "@utils/attendance";
-import { createContext, useContext } from "react";
+import { useContext } from "react";
 import type { DayButton } from "react-day-picker";
 
-const AttendanceContext = createContext<{
-  data: CalendarData | null;
-  isLoading: boolean;
-}>({ data: null, isLoading: false });
-
 const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
-  const { data, isLoading } = useContext(AttendanceContext);
+  const { state, data } = useContext(AttendanceContext);
+
   const attendance =
     data && getAttendance(props.day.date, data.people, data.events);
   const capacityLevels = attendance &&
@@ -64,7 +60,7 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
           ))}
         </span>
       )}
-      {!capacityLevels && isLoading && (
+      {!capacityLevels && state.status === "loading" && (
         <span
           aria-hidden="true"
           className="h-2 w-4 animate-pulse rounded-sm bg-muted"
@@ -75,22 +71,18 @@ const AttendanceDayButton = (props: React.ComponentProps<typeof DayButton>) => {
 };
 
 export const AttendanceCalendar = ({
-  data,
-  isLoading,
   selected,
   month,
   onSelect,
   onMonthChange,
 }: {
-  data: CalendarData | null;
-  isLoading: boolean;
   selected: Date;
   month: Date;
   onSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
 }) => {
   return (
-    <AttendanceContext.Provider value={{ data, isLoading }}>
+    <>
       <Calendar
         mode="single"
         required
@@ -116,6 +108,7 @@ export const AttendanceCalendar = ({
           today: "bg-none",
         }}
       />
+
       <div
         className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground"
         aria-label="Capacity legend"
@@ -140,6 +133,6 @@ export const AttendanceCalendar = ({
           more than 75%
         </span>
       </div>
-    </AttendanceContext.Provider>
+    </>
   );
 };
